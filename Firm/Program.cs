@@ -16,14 +16,27 @@ namespace Firm
         {
             using (XcoSpace space = new XcoSpace(0))
             {
-                try
+                string name;
+                int shares;
+                double pricePerShare;
+                if (args.Count() == 3 && Int32.TryParse(args[1], out shares) && Double.TryParse(args[2], out pricePerShare))
                 {
-                    XcoQueue<Request> q = space.Get<XcoQueue<Request>>("RequestQ", new Uri("xco://" + Environment.MachineName + ":" + 9000));
-                    q.Enqueue(new Request() { FirmName = "GOOG", PricePerShare = 556.0, Shares = 5000 });
+                    name = args[0];
+                    try
+                    {
+                        XcoQueue<Request> q = space.Get<XcoQueue<Request>>("RequestQ", new Uri("xco://" + Environment.MachineName + ":" + 9000));
+                        q.Enqueue(new Request() { FirmName = name, Shares = shares, PricePerShare = pricePerShare });
+                    }
+                    catch (XcoException)
+                    {
+                        Console.WriteLine("Unable to reach server.\nPress enter to exit.");
+                        Console.ReadLine();
+                    }
                 }
-                catch(XcoException)
+                else
                 {
-                    Console.WriteLine("Unable to reach server.");
+                    Console.Error.WriteLine("Enter a firmname, the number of shares and the price per share.\nPress enter to exit.");
+                    Console.ReadLine();
                 }
             }
         }

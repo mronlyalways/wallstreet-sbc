@@ -9,7 +9,7 @@ namespace SharedFeatures.Model
     [Serializable]
     public class FirmDepot
     {
-        public string Name { get; set; }
+        public string FirmName { get; set; }
 
         public int OwnedShares { get; set; }
     }
