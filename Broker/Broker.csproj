@@ -40,7 +40,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="XcoSpaces">
-      <HintPath>..\..\..\..\..\..\..\lib\XcoSpaces.dll</HintPath>
+      <HintPath>..\lib\XcoSpaces.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
