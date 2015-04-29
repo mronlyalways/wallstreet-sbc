@@ -41,6 +41,8 @@
   <ItemGroup>
     <Compile Include="Model\FirmDepot.cs" />
     <Compile Include="Model\Order.cs" />
+    <Compile Include="Model\Registration.cs" />
+    <Compile Include="Model\Request.cs" />
     <Compile Include="Model\Share.cs" />
     <Compile Include="Model\ShareholderDepot.cs" />
     <Compile Include="Model\Transaction.cs" />

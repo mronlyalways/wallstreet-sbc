@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace SharedFeatures.Model
 {
-    public class ShareholderDepot
+    [Serializable]
+    public class InvestorDepot
     {
+        public double Budget { get; set; }
+
+        public Dictionary<string, int> Shares { get; set; }
     }
 }

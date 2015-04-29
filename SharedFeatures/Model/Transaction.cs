@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace SharedFeatures.Model
 {
+    [Serializable]
     public class Transaction
     {
         public long Id { get; set; }
@@ -18,9 +19,9 @@ namespace SharedFeatures.Model
 
         public long PurchaseOrderId { get; set; }
 
-        public ShareholderDepot Seller { get; set; }
+        public InvestorDepot Seller { get; set; }
 
-        public ShareholderDepot Buyer { get; set; }
+        public InvestorDepot Buyer { get; set; }
 
         public double MarketValue { get; set; }
 

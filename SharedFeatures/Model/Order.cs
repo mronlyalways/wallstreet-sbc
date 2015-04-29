@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace SharedFeatures.Model
 {
+    [Serializable]
     public class Order
     {
         public enum OrderStatus { OPEN, PARTIAL, DONE, DELETED };

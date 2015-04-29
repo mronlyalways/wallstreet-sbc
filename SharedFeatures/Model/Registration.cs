@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace SharedFeatures.Model
 {
-    [Serializable]
-    public class FirmDepot
+    public class Registration
     {
-        public string Name { get; set; }
+        public long InvestorId { get; set; }
 
-        public int OwnedShares { get; set; }
+        public double Budget { get; set; }
     }
 }

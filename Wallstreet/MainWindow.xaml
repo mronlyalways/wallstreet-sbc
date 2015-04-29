@@ -14,8 +14,8 @@
     	</Grid.RowDefinitions>
     	<Menu />
     	<TabControl Grid.Row="1">
-    		<TabItem Header="Market" />
-			<TabItem Header="Transactions" />
+            <TabItem Header="Market" />
+            <TabItem Header="Transactions" />
 			<TabItem Header="Orders" />
 		</TabControl>
     </Grid>

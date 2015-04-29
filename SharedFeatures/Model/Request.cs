@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 namespace SharedFeatures.Model
 {
     [Serializable]
-    public class FirmDepot
+    public class Request
     {
-        public string Name { get; set; }
+        public String FirmName { get; set; }
 
-        public int OwnedShares { get; set; }
+        public int Shares { get; set; }
+
+        public double PricePerShare { get; set; }
     }
 }
