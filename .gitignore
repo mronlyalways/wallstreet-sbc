@@ -9,7 +9,8 @@
 .DS_Store
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
-
+lib/*.dll
+lib/*.xml
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
