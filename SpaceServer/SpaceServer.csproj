@@ -39,8 +39,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="XcoSpaces">
-      <HintPath>..\lib\XcoSpaces.dll</HintPath>
+    <Reference Include="XcoSpaces, Version=1.0.0.1014, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\lib\XcoSpaces.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

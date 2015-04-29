@@ -14,7 +14,7 @@ namespace Wallstreet
         public MainWindow()
         {
             InitializeComponent();
-            Closing += (s, e) => ViewModelLocator.Cleanup();
+            Closing += (s, e) => ResourceLocator.Cleanup();
         }
     }
 }

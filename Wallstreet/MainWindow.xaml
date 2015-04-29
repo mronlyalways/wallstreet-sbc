@@ -4,9 +4,21 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ignore="http://www.ignore.com"
+        xmlns:m="clr-namespace:Wallstreet.Model"
         mc:Ignorable="d ignore"
         Title="Wallstreet Application"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
+    <!--<Window.Resources>
+        <ResourceDictionary>
+            <DataTemplate DataType="{x:Type m:ShareInformation}">
+                <StackPanel Orientation="Horizontal" Margin="5,10">
+                    <Label Content="{Binding FirmName}"/>
+                    <Label Content="{Binding NoOfShares}"/>
+                    <Label Content="{Binding PricePerShare}"/>
+                </StackPanel>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Window.Resources>-->
     <Grid x:Name="LayoutRoot" VerticalAlignment="Top">
     	<Grid.RowDefinitions>
     		<RowDefinition/>
@@ -14,7 +26,9 @@
     	</Grid.RowDefinitions>
     	<Menu />
     	<TabControl Grid.Row="1">
-            <TabItem Header="Market" />
+            <TabItem Header="Market">
+                <ListBox ItemsSource="{Binding FirmDepots}"/>
+            </TabItem>
             <TabItem Header="Transactions" />
 			<TabItem Header="Orders" />
 		</TabControl>

@@ -24,6 +24,9 @@ namespace SpaceServer
                 space.Add(firmDepots, "FirmDepots");
                 firmDepots.AddNotificationForEntryAdd(OnDepotEntryAdded);
 
+                XcoDictionary<string, double> stockPrices = new XcoDictionary<string, double>();
+                space.Add(stockPrices, "StockPrices");
+
                 while (true)
                 {
                     try
@@ -41,11 +44,6 @@ namespace SpaceServer
         static void OnRequestEntryEnqueued(XcoQueue<Request> source, Request request)
         {
             Console.WriteLine("New request for {0}, publishing {1} shares for {2} Euros.", request.FirmName, request.Shares, request.PricePerShare);
-        }
-
-        static void OnRequestEntryDequeued(XcoQueue<Request> source, Request request)
-        {
-            Console.WriteLine("Removed request for {0}, publishing {1} shares for {2} Euros.", request.FirmName, request.Shares, request.PricePerShare);
         }
 
         static void OnDepotEntryAdded(XcoDictionary<string, FirmDepot> source, string key, FirmDepot depot)

@@ -1,14 +1,17 @@
 ﻿using Ninject;
+using Wallstreet.Model;
+using XcoSpaces;
 
 namespace Wallstreet.ViewModel
 {
-    public class ViewModelLocator
+    public class ResourceLocator
     {
         private static StandardKernel kernel;
 
-        static ViewModelLocator()
+        static ResourceLocator()
         {
             kernel = new StandardKernel();
+            kernel.Bind<IDataService>().To<XcoDataService>().InSingletonScope();
         }
 
         public MainViewModel Main
@@ -24,6 +27,7 @@ namespace Wallstreet.ViewModel
         /// </summary>
         public static void Cleanup()
         {
+            kernel.Dispose();
         }
     }
 }
