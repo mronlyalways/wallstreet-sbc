@@ -29,6 +29,14 @@ namespace SpaceServer
                 space.Add(stockPrices, "StockPrices");
                 stockPrices.AddNotificationForEntryAdd((s, k, r) => Console.WriteLine("New price for {0} is {1} Euros.", k, r));
 
+                XcoQueue<Registration> investorRegistrations = new XcoQueue<Registration>();
+                space.Add(investorRegistrations, "InvestorRegistrations");
+                investorRegistrations.AddNotificationForEntryEnqueued((s, r) => Console.WriteLine("New registration queued for Email address {0} and budget {1}.", r.InvestorEmail, r.Budget));
+
+                XcoDictionary<string, InvestorDepot> investorDepots = new XcoDictionary<string, InvestorDepot>();
+                space.Add(investorDepots, "InvestorDepots");
+                investorDepots.AddNotificationForEntryAdd((s, k, r) => Console.WriteLine("New investor depot entry for Email address {0} (Budget: {1}).", k, r.Budget));
+
                 Console.WriteLine("Press enter to quit ...");
                 Console.ReadLine();
                 space.Remove(qRequests);
