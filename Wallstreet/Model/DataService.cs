@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using XcoSpaces;
 using XcoSpaces.Collections;
+using SharedFeatures.Model;
 
 namespace Wallstreet.Model
 {
@@ -13,6 +14,8 @@ namespace Wallstreet.Model
     {
         private XcoSpace space;
         private XcoDictionary<string, double> stockPrices;
+        private XcoQueue<Registration> investorDepotRegistrations;
+        private XcoDictionary<string, InvestorDepot> investorDepots;
         private IList<Action<ShareInformation>> callbacks;
 
         public XcoDataService()
@@ -21,6 +24,10 @@ namespace Wallstreet.Model
             space = new XcoSpace(0);
             stockPrices = space.Get<XcoDictionary<string, double>>("StockPrices", new Uri("xco://" + Environment.MachineName + ":" + 9000));
             stockPrices.AddNotificationForEntryAdd(OnEntryAdded);
+            investorDepotRegistrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", new Uri("xco://" + Environment.MachineName + ":" + 9000));
+            investorDepotRegistrations.AddNotificationForEntryEnqueued(OnNewInvestorRegistrationAvailable);
+            investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", new Uri("xco://" + Environment.MachineName + ":" + 9000));
+            
         }
 
         public IEnumerable<ShareInformation> LoadShareInformation()
@@ -49,6 +56,36 @@ namespace Wallstreet.Model
                     callback(new ShareInformation() { FirmName = key, NoOfShares = 0, PricePerShare = price });
                 }), null);
                 
+            }
+        }
+
+        public void OnNewInvestorRegistrationAvailable(XcoQueue<Registration> source, Registration r)
+        {
+            using(XcoTransaction tx = space.BeginTransaction())
+            {
+                Registration reg = source.Dequeue();
+
+                InvestorDepot depot;
+                if (investorDepots.ContainsKey(reg.InvestorEmail)) 
+                {
+                   investorDepots.TryGetValue(reg.InvestorEmail, out depot);
+                }
+                else
+                {
+                    depot = new InvestorDepot();
+                }
+
+                depot.Budget += reg.Budget;
+
+                if (investorDepots.ContainsKey(reg.InvestorEmail))
+                {
+                    investorDepots[reg.InvestorEmail] = depot;
+                }
+                else
+                {
+                    investorDepots.Add(reg.InvestorEmail, depot);
+                }
+                tx.Commit();
             }
         }
 
