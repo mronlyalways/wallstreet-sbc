@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using XcoSpaces;
 using XcoSpaces.Collections;
@@ -18,37 +19,23 @@ namespace SpaceServer
             {
                 XcoQueue<Request> qRequests = new XcoQueue<Request>();
                 space.Add(qRequests, "RequestQ");
-                qRequests.AddNotificationForEntryEnqueued(OnRequestEntryEnqueued);
+                qRequests.AddNotificationForEntryEnqueued((s, r) => Console.WriteLine("New request queued for {0}, publishing {1} shares for {2} Euros.", r.FirmName, r.Shares, r.PricePerShare));
 
                 XcoDictionary<string, FirmDepot> firmDepots = new XcoDictionary<string, FirmDepot>();
                 space.Add(firmDepots, "FirmDepots");
-                firmDepots.AddNotificationForEntryAdd(OnDepotEntryAdded);
+                firmDepots.AddNotificationForEntryAdd((s, k, r) => Console.WriteLine("Depot entry created/overwritten for {0}, publishing/adding {1} shares.", k, r.OwnedShares));
 
                 XcoDictionary<string, double> stockPrices = new XcoDictionary<string, double>();
                 space.Add(stockPrices, "StockPrices");
+                stockPrices.AddNotificationForEntryAdd((s, k, r) => Console.WriteLine("New price for {0} is {1} Euros.", k, r));
 
-                while (true)
-                {
-                    try
-                    {
-                        // subscribe to containers and log activity
-                    }
-                    catch (XcoException e)
-                    {
-                        // log errors
-                    }
-                }
+                Console.WriteLine("Press enter to quit ...");
+                Console.ReadLine();
+                space.Remove(qRequests);
+                space.Remove(firmDepots);
+                space.Remove(stockPrices);
+                space.Close();
             }
-        }
-
-        static void OnRequestEntryEnqueued(XcoQueue<Request> source, Request request)
-        {
-            Console.WriteLine("New request for {0}, publishing {1} shares for {2} Euros.", request.FirmName, request.Shares, request.PricePerShare);
-        }
-
-        static void OnDepotEntryAdded(XcoDictionary<string, FirmDepot> source, string key, FirmDepot depot)
-        {
-            Console.WriteLine("New depot entry for {0}, publishing {1} shares.", key, depot.OwnedShares);
         }
     }
 }
