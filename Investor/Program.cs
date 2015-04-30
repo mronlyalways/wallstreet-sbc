@@ -21,8 +21,14 @@ namespace Investor
                 string line = Console.ReadLine();
                 if (line == "help") {
                     printHelp();
-                } else if (line == "register") {
+                } 
+                else if (line == "register") 
+                {
                     register();
+                }
+                else
+                {
+                    printHelp();
                 }
             }
         }

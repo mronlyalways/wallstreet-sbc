@@ -20,7 +20,13 @@ namespace Investor.ViewModel
         public void Register(string email, string budget)
         {
             double b;
-            if (double.TryParse(budget, out b) && b >= 0 && email.Length > 0)
+
+            if (!double.TryParse(budget, out b))
+            {
+                b = 0;
+            }
+
+            if (b >= 0 && email.Length > 0)
             {
                 Registration r = new Registration() { Budget = b, InvestorEmail = email };
                 this.service.login(r);

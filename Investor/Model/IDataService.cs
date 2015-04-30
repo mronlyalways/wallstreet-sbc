@@ -11,5 +11,9 @@ namespace Investor.Model
     public interface IDataService
     {
         void login(Registration r);
+
+        event System.EventHandler DepotHasUpdates;
+
+        InvestorDepot Depot();
     }
 }
