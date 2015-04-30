@@ -69,7 +69,7 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="XcoSpaces">
-      <HintPath>..\..\..\..\..\..\..\lib\XcoSpaces.dll</HintPath>
+      <HintPath>..\lib\XcoSpaces.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
