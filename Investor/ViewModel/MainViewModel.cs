@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Investor.Model;
+using System;
 
 namespace Investor.ViewModel
 {
@@ -11,10 +12,15 @@ namespace Investor.ViewModel
     public class MainViewModel : ViewModelBase
     {
         private IDataService service;
+        public InvestorDepot depot;
         public MainViewModel(IDataService service)
         {
             this.service = service;
-
+            this.service.OnUpdateForInvestorDepotAvailable(d =>
+            {
+                Console.WriteLine("Depot has an update:{0}{1}", System.Environment.NewLine, d.ToString());
+                this.depot = d;
+            });
         }
 
         public void Register(string email, string budget)
@@ -29,7 +35,7 @@ namespace Investor.ViewModel
             if (b >= 0 && email.Length > 0)
             {
                 Registration r = new Registration() { Budget = b, InvestorEmail = email };
-                this.service.login(r);
+                this.service.Login(r);
             }
         }
     }

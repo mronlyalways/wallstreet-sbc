@@ -12,5 +12,19 @@ namespace SharedFeatures.Model
         public double Budget { get; set; }
 
         public Dictionary<string, int> Shares { get; set; }
+
+        public override string ToString()
+        {
+            String output = "Budget: " + this.Budget + "; Shares: ";
+            if (this.Shares != null)
+            {
+                foreach (string key in this.Shares.Keys)
+                {
+                    output += key + ": " + this.Shares[key] + " - ";
+                }
+            }
+
+            return output;
+        }
     }
 }

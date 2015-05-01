@@ -5,15 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 using SharedFeatures;
 using SharedFeatures.Model;
+using GalaSoft.MvvmLight;
 
 namespace Investor.Model
 {
     public interface IDataService
     {
-        void login(Registration r);
+        void Login(Registration r);
 
-        event System.EventHandler DepotHasUpdates;
+        void OnUpdateForInvestorDepotAvailable(Action<InvestorDepot> callback);
 
-        InvestorDepot Depot();
     }
 }

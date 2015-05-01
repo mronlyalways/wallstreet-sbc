@@ -3,32 +3,34 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using XcoSpaces;
 using XcoSpaces.Collections;
 using SharedFeatures;
 using SharedFeatures.Model;
+using GalaSoft.MvvmLight;
 
 namespace Investor.Model
 {
-    class XcoDataService : IDataService
+    class XcoDataService : ObservableObject, IDataService
     {
         private XcoSpace space;
         private XcoQueue<Registration> registrations;
         private XcoDictionary<string, InvestorDepot> investorDepots;
         private InvestorDepot depot;
         private Registration registration;
-
-        public event System.EventHandler DepotHasUpdates;
+        private IList<Action<InvestorDepot>> callbacks;
 
         public XcoDataService()
         {
+            this.callbacks = new List<Action<InvestorDepot>>();
             this.space = new XcoSpace(0);
             this.registrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", new Uri("xco://" + Environment.MachineName + ":" + 9000));
             this.investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", new Uri("xco://" + Environment.MachineName + ":" + 9000));
             this.investorDepots.AddNotificationForEntryAdd(OnNewInvestorDepotAdded);
         }
 
-        public void login(Registration r)
+        public void Login(Registration r)
         {
             this.registration = r;
             this.registrations.Enqueue(r);
@@ -38,13 +40,17 @@ namespace Investor.Model
         {
             if (this.registration != null && this.registration.InvestorEmail == key)
             {
-                Console.WriteLine("Received depot!");
                 this.depot = d;
-                if (DepotHasUpdates != null)
-                {
-                    DepotHasUpdates(this, EventArgs.Empty);
-                }    
+
+                foreach (Action<InvestorDepot> callback in this.callbacks) {
+                    callback(d);
+                }   
             }
+        }
+
+        public void OnUpdateForInvestorDepotAvailable(Action<InvestorDepot> callback)
+        {
+            this.callbacks.Add(callback);
         }
 
         public InvestorDepot Depot()
