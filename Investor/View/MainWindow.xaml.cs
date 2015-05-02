@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using Investor.ViewModel;
 
-namespace Investor
+namespace Investor.View
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

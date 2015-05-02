@@ -13,7 +13,8 @@ namespace Investor.Model
     {
         void Login(Registration r);
 
-        void OnUpdateForInvestorDepotAvailable(Action<InvestorDepot> callback);
+        void OnRegistrationConfirmed(Action callback);
 
+        InvestorDepot Depot { get; }
     }
 }

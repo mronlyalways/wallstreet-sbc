@@ -22,6 +22,14 @@ namespace Investor.ViewModel
             }
         }
 
+        public LoginViewModel Login
+        {
+            get
+            {
+                return kernel.Get<LoginViewModel>();
+            }
+        }
+
         /// <summary>
         /// Cleans up all the resources.
         /// </summary>

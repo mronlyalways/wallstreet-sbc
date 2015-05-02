@@ -12,27 +12,28 @@ using GalaSoft.MvvmLight;
 
 namespace Investor.Model
 {
-    class XcoDataService : ObservableObject, IDataService
+    class XcoDataService : IDataService
     {
         private XcoSpace space;
         private XcoQueue<Registration> registrations;
         private XcoDictionary<string, InvestorDepot> investorDepots;
-        private InvestorDepot depot;
+        private IList<Action> callbacks;
         private Registration registration;
-        private IList<Action<InvestorDepot>> callbacks;
 
         public XcoDataService()
         {
-            this.callbacks = new List<Action<InvestorDepot>>();
+            this.callbacks = new List<Action>();
             this.space = new XcoSpace(0);
             this.registrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", new Uri("xco://" + Environment.MachineName + ":" + 9000));
             this.investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", new Uri("xco://" + Environment.MachineName + ":" + 9000));
             this.investorDepots.AddNotificationForEntryAdd(OnNewInvestorDepotAdded);
         }
 
+        public InvestorDepot Depot { get; private set; }
+
         public void Login(Registration r)
         {
-            this.registration = r;
+            registration = r;
             this.registrations.Enqueue(r);
         }
 
@@ -40,22 +41,18 @@ namespace Investor.Model
         {
             if (this.registration != null && this.registration.InvestorEmail == key)
             {
-                this.depot = d;
-
-                foreach (Action<InvestorDepot> callback in this.callbacks) {
-                    callback(d);
-                }   
+                Depot = d;
+                foreach (Action callback in this.callbacks)
+                {
+                    App.Current.Dispatcher.BeginInvoke(new Action(() => callback()), null);
+                }
+                investorDepots.ClearNotificationForEntryAdd();
             }
         }
 
-        public void OnUpdateForInvestorDepotAvailable(Action<InvestorDepot> callback)
+        public void OnRegistrationConfirmed(Action callback)
         {
             this.callbacks.Add(callback);
-        }
-
-        public InvestorDepot Depot()
-        {
-            return this.depot;
         }
     }
 }

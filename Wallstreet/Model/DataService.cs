@@ -27,7 +27,6 @@ namespace Wallstreet.Model
             investorDepotRegistrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", new Uri("xco://" + Environment.MachineName + ":" + 9000));
             investorDepotRegistrations.AddNotificationForEntryEnqueued(OnNewInvestorRegistrationAvailable);
             investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", new Uri("xco://" + Environment.MachineName + ":" + 9000));
-            
         }
 
         public IEnumerable<ShareInformation> LoadShareInformation()
@@ -54,8 +53,7 @@ namespace Wallstreet.Model
                 Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                 {
                     callback(new ShareInformation() { FirmName = key, NoOfShares = 0, PricePerShare = price });
-                }), null);
-                
+                }), null); 
             }
         }
 
@@ -68,7 +66,7 @@ namespace Wallstreet.Model
                 InvestorDepot depot;
                 if (investorDepots.ContainsKey(reg.InvestorEmail)) 
                 {
-                   investorDepots.TryGetValue(reg.InvestorEmail, out depot);
+                   depot = investorDepots[reg.InvestorEmail];
                 }
                 else
                 {

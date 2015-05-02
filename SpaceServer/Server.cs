@@ -42,6 +42,8 @@ namespace SpaceServer
                 space.Remove(qRequests);
                 space.Remove(firmDepots);
                 space.Remove(stockPrices);
+                space.Remove(investorRegistrations);
+                space.Remove(investorDepots);
                 space.Close();
             }
         }

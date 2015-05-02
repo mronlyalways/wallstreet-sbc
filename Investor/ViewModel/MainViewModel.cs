@@ -11,33 +11,13 @@ namespace Investor.ViewModel
 
     public class MainViewModel : ViewModelBase
     {
-        private IDataService service;
-        public InvestorDepot depot;
-        public MainViewModel(IDataService service)
+        private IDataService data;
+        private InvestorDepot depot;
+        
+        public MainViewModel(IDataService data)
         {
-            this.service = service;
-            this.service.OnUpdateForInvestorDepotAvailable(d =>
-            {
-                Console.WriteLine("Depot has an update:{0}{1}", System.Environment.NewLine, d.ToString());
-                this.depot = d;
-            });
-        }
-
-        public void Register(string email, string budget)
-        {
-            double b;
-
-            if (!double.TryParse(budget, out b))
-            {
-                b = 0;
-            }
-
-            if (b >= 0 && email.Length > 0)
-            {
-                Registration r = new Registration() { Budget = b, InvestorEmail = email };
-                this.service.Login(r);
-            }
+            this.data = data;
+            depot = data.Depot;
         }
     }
-
 }
