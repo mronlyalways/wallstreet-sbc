@@ -16,5 +16,10 @@ namespace Investor.View
             InitializeComponent();
             Closing += (s, e) => ViewModelLocator.Cleanup();
         }
+
+        private void ListBox_Selected(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

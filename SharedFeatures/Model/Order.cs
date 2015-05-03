@@ -11,9 +11,13 @@ namespace SharedFeatures.Model
     {
         public enum OrderStatus { OPEN, PARTIAL, DONE, DELETED };
 
-        public long Id { get; set; }
+        public enum OrderType { BUY, SELL }
 
-        public long InvestorId { get; set; }
+        public string Id { get; set; }
+
+        public string InvestorId { get; set; }
+
+        public OrderType Type { get; set; }
 
         public string ShareName { get; set; }
 

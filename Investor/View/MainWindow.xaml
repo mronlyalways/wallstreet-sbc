@@ -5,4 +5,56 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         Title="SBC Investor"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <Menu Grid.Row="0" HorizontalAlignment="Stretch">
+            <Label Content="Account:" />
+            <Label Content="{Binding Email}" />
+            <Label Margin="10,0,0,0" Content="Budget:" />
+            <Label Content="{Binding Budget}" />
+            <Button HorizontalAlignment="Right" Content="Logout" Command="{Binding LogoutCommand}" />
+        </Menu>
+        <TabControl Grid.Row="1">
+            <TabItem Header="Market">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Column="0" Grid.Row="0" Content="Buy"/>
+                    <Label Grid.Column="1" Grid.Row="0" Content="Sell"/>
+                    <ListBox Grid.Column="0" Grid.Row="1" ItemsSource="{Binding MarketInformation}" SelectedItem="{Binding SelectedBuyingShare}"/>
+                    <ListBox Grid.Column="1" Grid.Row="1" ItemsSource="{Binding OwnedShares}" SelectedItem="{Binding SelectedSellingShare}"/>
+                    <StackPanel Grid.Column="0" Grid.Row="2">
+                        <Label Content="Share to be aquired:" />
+                        <Label Content="{Binding SelectedBuyingShare}" />
+                        <Label Content="Number of shares:" />
+                        <TextBox Text="{Binding NoOfSharesBuying}" />
+                        <Label Content="Upper Price Limit:" />
+                        <TextBox Text="{Binding UpperPriceLimit}" />
+                        <Button Content="Place Order" Command="{Binding PlaceBuyingOrderCommand}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Grid.Row="2">
+                        <Label Content="Share to be sold:" />
+                        <Label Content="{Binding SelectedSellingShare}" />
+                        <Label Content="Number of shares:" />
+                        <TextBox Text="{Binding NoOfSharesSelling}" />
+                        <Label Content="Lower Price Limit:" />
+                        <TextBox Text="{Binding LowerPriceLimit}" />
+                        <Button Content="Place Order" Command="{Binding PlaceSellingOrderCommand}" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Orders"/>
+            <TabItem Header="Account"/>
+        </TabControl>
+    </Grid>
 </Window>

@@ -9,7 +9,7 @@ namespace SharedFeatures.Model
     [Serializable]
     public class Registration
     {
-        public string InvestorEmail { get; set; }
+        public string Email { get; set; }
 
         public double Budget { get; set; }
     }

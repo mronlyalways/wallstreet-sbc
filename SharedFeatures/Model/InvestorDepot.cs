@@ -9,6 +9,8 @@ namespace SharedFeatures.Model
     [Serializable]
     public class InvestorDepot
     {
+        public string Email { get; set; }
+
         public double Budget { get; set; }
 
         public Dictionary<string, int> Shares { get; set; }

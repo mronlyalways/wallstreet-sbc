@@ -48,6 +48,7 @@
     <Compile Include="Model\Request.cs" />
     <Compile Include="Model\Share.cs" />
     <Compile Include="Model\InvestorDepot.cs" />
+    <Compile Include="Model\ShareInformation.cs" />
     <Compile Include="Model\Transaction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

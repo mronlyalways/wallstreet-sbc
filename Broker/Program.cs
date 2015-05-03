@@ -20,6 +20,7 @@ namespace Broker
                 {
                     XcoQueue<Request> q = space.Get<XcoQueue<Request>>("RequestQ", new Uri("xco://" + Environment.MachineName + ":" + 9000));
                     XcoDictionary<string, FirmDepot> firmDepot = space.Get<XcoDictionary<string, FirmDepot>>("FirmDepots", new Uri("xco://" + Environment.MachineName + ":" + 9000));
+                    XcoDictionary<string, double> stockPrices = space.Get<XcoDictionary<string, double>>("StockPrices", new Uri("xco://" + Environment.MachineName + ":" + 9000));
                     Request request;
                     FirmDepot depot;
                     while (true)
@@ -35,6 +36,7 @@ namespace Broker
                         else
                         {
                             firmDepot.Add(request.FirmName, new FirmDepot() { FirmName = request.FirmName, OwnedShares = request.Shares });
+                            stockPrices.Add(request.FirmName, request.PricePerShare);
                             Console.WriteLine("Create new firm depot for \"{0}\" with {1} shares, selling for {2}", request.FirmName, request.Shares, request.PricePerShare);
                         }
                     }

@@ -9,11 +9,17 @@ using GalaSoft.MvvmLight;
 
 namespace Investor.Model
 {
-    public interface IDataService
+    public interface IDataService : IDisposable
     {
         void Login(Registration r);
 
-        void OnRegistrationConfirmed(Action callback);
+        void AddRegistrationConfirmedCallback(Action callback);
+
+        IEnumerable<ShareInformation> LoadMarketInformation();
+
+        void AddNewMarketInformationAvailableCallback(Action<ShareInformation> callback);
+
+        void PlaceOrder(Order order);
 
         InvestorDepot Depot { get; }
     }

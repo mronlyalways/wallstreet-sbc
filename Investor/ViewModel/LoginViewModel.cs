@@ -16,7 +16,7 @@ namespace Investor.ViewModel
         public LoginViewModel(IDataService data)
         {
             this.data = data;
-            data.OnRegistrationConfirmed(OnRegistrationConfirmed);
+            data.AddRegistrationConfirmedCallback(OnRegistrationConfirmed);
             SubmitCommand = new RelayCommand(Submit, () => !Email.Equals(string.Empty) && Budget > 0 && !submitted);
             Email = string.Empty;
             Budget = 0;
@@ -72,7 +72,7 @@ namespace Investor.ViewModel
 
         public void Submit()
         {
-            data.Login(new Registration() { InvestorEmail = Email, Budget = Budget });
+            data.Login(new Registration() { Email = Email, Budget = Budget });
             ButtonText = "Waiting for confirmation ...";
             submitted = true;
             SubmitCommand.RaiseCanExecuteChanged();

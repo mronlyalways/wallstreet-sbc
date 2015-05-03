@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SharedFeatures.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +9,14 @@ namespace Wallstreet.Model
 {
     public interface IDataService
     {
-        IEnumerable<ShareInformation> LoadShareInformation();
+        IEnumerable<ShareInformation> LoadMarketInformation();
 
-        void OnNewShareInformationAvailable(Action<ShareInformation> callback);
+        IEnumerable<Order> LoadOrders();
+
+        void AddNewMarketInformationAvailableCallback(Action<ShareInformation> callback);
+
+        void AddNewOrderAddedCallback(Action<Order> callback);
+
+        void AddOrderRemovedCallback(Action<Order> callback);
     }
 }

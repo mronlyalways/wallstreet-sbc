@@ -77,9 +77,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Model\DataService.cs" />
+    <Compile Include="Model\XcoDataService.cs" />
     <Compile Include="Model\IDataService.cs" />
-    <Compile Include="Model\ShareInformation.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ResourceLocator.cs" />
     <Page Include="MainWindow.xaml">

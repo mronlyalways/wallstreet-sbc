@@ -27,10 +27,25 @@
     	<Menu />
     	<TabControl Grid.Row="1">
             <TabItem Header="Market">
-                <ListBox ItemsSource="{Binding FirmDepots}"/>
+                <ListBox ItemsSource="{Binding MarketInformation}"/>
             </TabItem>
             <TabItem Header="Transactions" />
-			<TabItem Header="Orders" />
-		</TabControl>
+            <TabItem Header="Orders">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Row="0" Grid.Column="0" Content="Buying Orders"/>
+                    <Label Grid.Row="0" Grid.Column="1" Content="Selling Orders"/>
+                    <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding BuyingOrders}"/>
+                    <ListBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding SellingOrders}"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>
