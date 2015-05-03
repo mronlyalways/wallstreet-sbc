@@ -25,7 +25,15 @@ namespace SharedFeatures.Model
 
         public int TotalNoOfShares { get; set; }
 
-        public int NoOfSharesProcessed { get; set; }
+        public int NoOfProcessedShares { get; set; }
+
+        public int NoOfOpenShares
+        {
+            get
+            {
+                return TotalNoOfShares - NoOfProcessedShares;
+            }
+        }
 
         public OrderStatus Status;
     }
