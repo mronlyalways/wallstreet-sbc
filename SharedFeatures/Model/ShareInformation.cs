@@ -8,11 +8,11 @@ namespace SharedFeatures.Model
 {
     public class ShareInformation
     {
-        public string FirmName;
+        public string FirmName { get; set; }
 
-        public int NoOfShares;
-        
-        public double PricePerShare;
+        public int NoOfShares { get; set; }
+
+        public double PricePerShare { get; set; }
 
         public override string ToString()
         {

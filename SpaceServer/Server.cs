@@ -17,37 +17,43 @@ namespace SpaceServer
         {
             using (XcoSpace space = new XcoSpace(9000))
             {
-                XcoQueue<Request> qRequests = new XcoQueue<Request>();
+                var qRequests = new XcoQueue<Request>();
                 space.Add(qRequests, "RequestQ");
                 qRequests.AddNotificationForEntryEnqueued((s, r) => Console.WriteLine("New request queued for {0}, publishing {1} shares for {2} Euros.", r.FirmName, r.Shares, r.PricePerShare));
 
-                XcoDictionary<string, FirmDepot> firmDepots = new XcoDictionary<string, FirmDepot>();
+                var firmDepots = new XcoDictionary<string, FirmDepot>();
                 space.Add(firmDepots, "FirmDepots");
                 firmDepots.AddNotificationForEntryAdd((s, k, r) => Console.WriteLine("Depot entry created/overwritten for {0}, publishing/adding {1} shares.", k, r.OwnedShares));
 
-                XcoDictionary<string, double> stockPrices = new XcoDictionary<string, double>();
-                space.Add(stockPrices, "StockPrices");
-                stockPrices.AddNotificationForEntryAdd((s, k, r) => Console.WriteLine("New price for {0} is {1} Euros.", k, r));
+                var stockInformation = new XcoDictionary<string, Tuple<int, double>>();
+                space.Add(stockInformation, "StockInformation");
+                stockInformation.AddNotificationForEntryAdd((s, k, r) => Console.WriteLine("New info for {0}: price per share {1:C}, at a volume of {2} shares.", k, r.Item2, r.Item1));
 
-                XcoQueue<Registration> investorRegistrations = new XcoQueue<Registration>();
+                var investorRegistrations = new XcoQueue<Registration>();
                 space.Add(investorRegistrations, "InvestorRegistrations");
                 investorRegistrations.AddNotificationForEntryEnqueued((s, r) => Console.WriteLine("New registration queued for Email address {0} and budget {1}.", r.Email, r.Budget));
 
-                XcoDictionary<string, InvestorDepot> investorDepots = new XcoDictionary<string, InvestorDepot>();
+                var investorDepots = new XcoDictionary<string, InvestorDepot>();
                 space.Add(investorDepots, "InvestorDepots");
                 investorDepots.AddNotificationForEntryAdd((s, k, r) => Console.WriteLine("New investor depot entry for Email address {0} (Budget: {1}).", k, r.Budget));
 
-                XcoList<Order> orders = new XcoList<Order>();
+                var orders = new XcoDictionary<string, Order>();
                 space.Add(orders, "Orders");
-                orders.AddNotificationForEntryAdd((s, r, i) => Console.WriteLine("New {0} order for Investor {1}, intending to buy {2} shares from {3}.", r.Type, r.InvestorId, r.ShareName, r.TotalNoOfShares));
+                orders.AddNotificationForEntryAdd((s, k, v) => Console.WriteLine("New {0} order for Investor {1}, intending to buy {2} shares from {3}.", v.Type, v.InvestorId, v.ShareName, v.TotalNoOfShares));
+
+                var transactions = new XcoList<Transaction>();
+                space.Add(transactions, "Transactions");
+                transactions.AddNotificationForEntryAdd((s, t, i) => Console.WriteLine("New transaction between {1} and {2}, transfering {2} shares for {3} Euros per share.", t.SellerId, t.BuyerId, t.NoOfSharesSold, t.PricePerShare));
 
                 Console.WriteLine("Press enter to quit ...");
                 Console.ReadLine();
                 space.Remove(qRequests);
                 space.Remove(firmDepots);
-                space.Remove(stockPrices);
+                space.Remove(stockInformation);
                 space.Remove(investorRegistrations);
                 space.Remove(investorDepots);
+                space.Remove(orders);
+                space.Remove(transactions);
                 space.Close();
             }
         }

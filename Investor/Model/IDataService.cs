@@ -11,16 +11,18 @@ namespace Investor.Model
 {
     public interface IDataService : IDisposable
     {
+        InvestorDepot Depot { get; }
+        
         void Login(Registration r);
 
-        void AddRegistrationConfirmedCallback(Action callback);
+        void PlaceOrder(Order order);
 
         IEnumerable<ShareInformation> LoadMarketInformation();
 
         void AddNewMarketInformationAvailableCallback(Action<ShareInformation> callback);
 
-        void PlaceOrder(Order order);
+        void AddNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback);
 
-        InvestorDepot Depot { get; }
+        void RemoveNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback);
     }
 }

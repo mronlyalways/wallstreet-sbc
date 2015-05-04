@@ -35,6 +35,31 @@ namespace SharedFeatures.Model
             }
         }
 
-        public OrderStatus Status;
+        public OrderStatus Status { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as Order;
+            if (obj != null)
+            {
+                var result = Id.Equals(other.Id) 
+                    && InvestorId.Equals(other.InvestorId) 
+                    && Type == other.Type 
+                    && ShareName.Equals(other.ShareName) 
+                    && Limit == other.Limit 
+                    && TotalNoOfShares == other.TotalNoOfShares 
+                    && Status == other.Status;
+                return result;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            return TotalNoOfShares * NoOfProcessedShares;
+        }
     }
 }

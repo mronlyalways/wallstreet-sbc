@@ -4,21 +4,58 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ignore="http://www.ignore.com"
-        xmlns:m="clr-namespace:Wallstreet.Model"
+        xmlns:m="clr-namespace:SharedFeatures.Model;assembly=SharedFeatures"
         mc:Ignorable="d ignore"
         Title="Wallstreet Application"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
-    <!--<Window.Resources>
+    <Window.Resources>
         <ResourceDictionary>
-            <DataTemplate DataType="{x:Type m:ShareInformation}">
+            <DataTemplate x:Key="TransactionTemplate" DataType="{x:Type m:Transaction}">
                 <StackPanel Orientation="Horizontal" Margin="5,10">
+                    <Label Content="Share Name:"/>
+                    <Label Content="{Binding ShareName}"/>
+                    <Label Content="Buyer:"/>
+                    <Label Content="{Binding BuyerId}"/>
+                    <Label Content="Seller:"/>
+                    <Label Content="{Binding SellerId}"/>
+                    <Label Content="Shares Sold:"/>
+                    <Label Content="{Binding NoOfSharesSold}"/>
+                    <Label Content="Price per share:"/>
+                    <Label Content="{Binding PricePerShare}"/>
+                    <Label Content="Total Cost:"/>
+                    <Label Content="{Binding TotalCost}"/>
+                </StackPanel>
+            </DataTemplate>
+            <DataTemplate x:Key="ShareInformationTemplate" DataType="{x:Type m:ShareInformation}">
+                <StackPanel Orientation="Horizontal" Margin="5,10">
+                    <Label Content="Share Name:"/>
                     <Label Content="{Binding FirmName}"/>
+                    <Label Content="Share Volume:"/>
                     <Label Content="{Binding NoOfShares}"/>
+                    <Label Content="Price per share:"/>
                     <Label Content="{Binding PricePerShare}"/>
                 </StackPanel>
             </DataTemplate>
+            <DataTemplate x:Key="OrderTemplate" DataType="{x:Type m:Order}">
+                <StackPanel Orientation="Horizontal" Margin="5,10">
+                    <Label Content="Order Type:"/>
+                    <Label Content="{Binding Type}"/>
+                    <Label Content="Status:"/>
+                    <Label Content="{Binding Status}"/>
+                    <Label Content="Buyer/Seller:"/>
+                    <Label Content="{Binding InvestorId}"/>
+                    <Label Content="Share Name:"/>
+                    <Label Content="{Binding ShareName}"/>
+                    <Label Content="Total Shares:"/>
+                    <Label Content="{Binding TotalNoOfShares}"/>
+                    <Label Content="Processed Shares:"/>
+                    <Label Content="{Binding NoOfProcessedShares}"/>
+                    <Label Content="Price Limit:"/>
+                    <Label Content="{Binding Limit}"/>
+                </StackPanel>
+            </DataTemplate>
         </ResourceDictionary>
-    </Window.Resources>-->
+    </Window.Resources>
     <Grid x:Name="LayoutRoot" VerticalAlignment="Top">
     	<Grid.RowDefinitions>
     		<RowDefinition/>
@@ -27,9 +64,11 @@
     	<Menu />
     	<TabControl Grid.Row="1">
             <TabItem Header="Market">
-                <ListBox ItemsSource="{Binding MarketInformation}"/>
+                <ListBox ItemTemplate="{StaticResource ShareInformationTemplate}" ItemsSource="{Binding MarketInformation}"/>
             </TabItem>
-            <TabItem Header="Transactions" />
+            <TabItem Header="Transactions">
+                <ListBox ItemTemplate="{StaticResource TransactionTemplate}" ItemsSource="{Binding Transactions}"/>
+            </TabItem>
             <TabItem Header="Orders">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -42,8 +81,8 @@
                     </Grid.ColumnDefinitions>
                     <Label Grid.Row="0" Grid.Column="0" Content="Buying Orders"/>
                     <Label Grid.Row="0" Grid.Column="1" Content="Selling Orders"/>
-                    <ListBox Grid.Row="1" Grid.Column="0" ItemsSource="{Binding BuyingOrders}"/>
-                    <ListBox Grid.Row="1" Grid.Column="1" ItemsSource="{Binding SellingOrders}"/>
+                    <ListBox Grid.Row="1" Grid.Column="0" ItemTemplate="{StaticResource OrderTemplate}" ItemsSource="{Binding BuyingOrders}"/>
+                    <ListBox Grid.Row="1" Grid.Column="1" ItemTemplate="{StaticResource OrderTemplate}" ItemsSource="{Binding SellingOrders}"/>
                 </Grid>
             </TabItem>
         </TabControl>

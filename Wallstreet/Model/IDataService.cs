@@ -13,10 +13,14 @@ namespace Wallstreet.Model
 
         IEnumerable<Order> LoadOrders();
 
+        IEnumerable<Transaction> LoadTransactions();
+
         void AddNewMarketInformationAvailableCallback(Action<ShareInformation> callback);
 
         void AddNewOrderAddedCallback(Action<Order> callback);
 
         void AddOrderRemovedCallback(Action<Order> callback);
+
+        void AddNewTransactionAddedCallback(Action<Transaction> callback);
     }
 }

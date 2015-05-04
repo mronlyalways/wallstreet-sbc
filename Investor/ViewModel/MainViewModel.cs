@@ -20,30 +20,144 @@ namespace Investor.ViewModel
             this.data = data;
             depot = data.Depot;
             MarketInformation = new ObservableCollection<ShareInformation>(data.LoadMarketInformation());
-            PlaceBuyingOrderCommand = new RelayCommand(PlaceBuyingOrder, () => true);
-            PlaceSellingOrderCommand = new RelayCommand(PlaceSellingOrder, () => true);
+            data.AddNewInvestorInformationAvailableCallback(Refresh);
+            data.AddNewMarketInformationAvailableCallback(UpdateShareInformation);
+
+            PlaceBuyingOrderCommand = new RelayCommand(PlaceBuyingOrder, () => SelectedBuyingShare != null);
+            PlaceSellingOrderCommand = new RelayCommand(PlaceSellingOrder, () => SelectedSellingShare != null);
             LogoutCommand = new RelayCommand(Logout, () => true);
+        }
+
+        private void Refresh(InvestorDepot d)
+        {
+            depot = d;
+            RaisePropertyChanged(() => Budget);
+            OwnedShares = new ObservableCollection<ShareInformation>(d.Shares.Select(x => new ShareInformation { FirmName = x.Key, NoOfShares = x.Value }));
+        }
+
+        private void UpdateShareInformation(ShareInformation info)
+        {
+            MarketInformation = new ObservableCollection<ShareInformation>(MarketInformation.Where(x => x.FirmName != info.FirmName));
+            MarketInformation.Add(info);
         }
 
         public string Email { get { return depot.Email; } }
 
         public double Budget { get { return depot.Budget; } }
 
-        public ObservableCollection<ShareInformation> MarketInformation { get; set; }
+        private ObservableCollection<ShareInformation> marketInformation;
+        public ObservableCollection<ShareInformation> MarketInformation
+        {
+            get
+            {
+                return marketInformation;
+            }
+            set
+            {
+                marketInformation = value;
+                RaisePropertyChanged(() => MarketInformation);
+            }
+        }
 
-        public ObservableCollection<ShareInformation> OwnedShares { get; set; }
+        private ObservableCollection<ShareInformation> ownedShares;
+        public ObservableCollection<ShareInformation> OwnedShares
+        {
+            get
+            {
+                return ownedShares;
+            }
+            set
+            {
+                ownedShares = value;
+                RaisePropertyChanged(() => OwnedShares);
+            }
+        }
 
-        public ShareInformation SelectedBuyingShare { get; set; }
+        private ShareInformation selectedBuyingShare;
+        public ShareInformation SelectedBuyingShare
+        {
+            get
+            {
+                return selectedBuyingShare;
+            }
+            set
+            {
+                selectedBuyingShare = value;
+                RaisePropertyChanged(() => SelectedBuyingShare);
+                PlaceBuyingOrderCommand.RaiseCanExecuteChanged();
+            }
+        }
 
-        public ShareInformation SelectedSellingShare { get; set; }
+        private ShareInformation selectedSellingShare;
+        public ShareInformation SelectedSellingShare
+        {
+            get
+            {
+                return selectedSellingShare;
+            }
+            set
+            {
+                selectedSellingShare = value;
+                RaisePropertyChanged(() => SelectedSellingShare);
+                PlaceSellingOrderCommand.RaiseCanExecuteChanged();
+            }
+        }
 
-        public int NoOfSharesBuying { get; set; }
+        private int noOfSharesBuying;
+        public int NoOfSharesBuying
+        {
+            get
+            {
+                return noOfSharesBuying;
+            }
+            set
+            {
+                noOfSharesBuying = value;
+                RaisePropertyChanged(() => NoOfSharesBuying);
+            }
+        }
 
-        public int NoOfSharesSelling { get; set; }
+        private int noOfSharesSelling;
+        public int NoOfSharesSelling
+        {
+            get
+            {
+                return noOfSharesSelling;
+            }
+            set
+            {
+                noOfSharesSelling = value;
+                RaisePropertyChanged(() => NoOfSharesSelling);
+            }
+        }
 
-        public double UpperPriceLimit { get; set; }
+        private double upperPriceLimit;
+        public double UpperPriceLimit
+        {
+            get
+            {
+                return upperPriceLimit;
+            }
+            set
+            {
+                upperPriceLimit = value;
+                RaisePropertyChanged(() => UpperPriceLimit);
+            }
+        }
 
-        public double LowerPriceLimit { get; set; }
+        private double lowerPriceLimit;
+        public double LowerPriceLimit
+        {
+            get
+            {
+                return lowerPriceLimit;
+            }
+            set
+            {
+                lowerPriceLimit = value;
+                RaisePropertyChanged(() => LowerPriceLimit);
+            }
+        }
 
         public RelayCommand PlaceBuyingOrderCommand { get; private set; }
 

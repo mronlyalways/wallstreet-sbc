@@ -16,7 +16,7 @@ namespace Investor.ViewModel
         public LoginViewModel(IDataService data)
         {
             this.data = data;
-            data.AddRegistrationConfirmedCallback(OnRegistrationConfirmed);
+            data.AddNewInvestorInformationAvailableCallback(OnRegistrationConfirmed);
             SubmitCommand = new RelayCommand(Submit, () => !Email.Equals(string.Empty) && Budget > 0 && !submitted);
             Email = string.Empty;
             Budget = 0;
@@ -78,11 +78,12 @@ namespace Investor.ViewModel
             SubmitCommand.RaiseCanExecuteChanged();
         }
 
-        public void OnRegistrationConfirmed()
+        public void OnRegistrationConfirmed(InvestorDepot depot)
         {
             Messenger.Default.Send<NotificationMessage>(new NotificationMessage(this, "Close"));
             var MainWindow = new MainWindow();
             MainWindow.Show();
+            data.RemoveNewInvestorInformationAvailableCallback(OnRegistrationConfirmed);
             this.Cleanup();
         }
     }

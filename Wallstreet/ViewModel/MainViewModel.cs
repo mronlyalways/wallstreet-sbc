@@ -16,12 +16,14 @@ namespace Wallstreet.ViewModel
         {
             this.data = data;
             MarketInformation = new ObservableCollection<ShareInformation>(data.LoadMarketInformation());
+            Transactions = new ObservableCollection<Transaction>(data.LoadTransactions());
             var orders = data.LoadOrders();
             BuyingOrders = new ObservableCollection<Order>(orders.Where(x => x.Type == Order.OrderType.BUY));
             SellingOrders = new ObservableCollection<Order>(orders.Where(x => x.Type == Order.OrderType.SELL));
 
             data.AddNewMarketInformationAvailableCallback(OnNewMarketInformationAvailable);
             data.AddNewOrderAddedCallback(OnNewOrderAdded);
+            data.AddNewTransactionAddedCallback(Transactions.Add);
         }
 
         public ObservableCollection<ShareInformation> MarketInformation { get; set; }

@@ -9,26 +9,38 @@ namespace SharedFeatures.Model
     [Serializable]
     public class Transaction
     {
-        public long Id { get; set; }
-
-        public long TransactionId { get; set; }
+        public string TransactionId { get; set; }
 
         public long BrokerId { get; set; }
 
-        public long SellingOrderId { get; set; }
+        public string ShareName { get; set; }
 
-        public long PurchaseOrderId { get; set; }
+        public string BuyingOrderId { get; set; }
 
-        public InvestorDepot Seller { get; set; }
+        public string SellingOrderId { get; set; }
 
-        public InvestorDepot Buyer { get; set; }
+        public string BuyerId { get; set; }
 
-        public double MarketValue { get; set; }
+        public string SellerId { get; set; }
+
+        public double PricePerShare { get; set; }
 
         public int NoOfSharesSold { get; set; }
 
-        public double TotalCost { get; set; }
+        public double TotalCost
+        {
+            get
+            {
+                return PricePerShare * NoOfSharesSold;
+            }
+        }
 
-        public double Provision { get; set; }
+        public double Provision
+        {
+            get
+            {
+                return TotalCost * 0.03;
+            }
+        }
     }
 }

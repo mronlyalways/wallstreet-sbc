@@ -40,7 +40,7 @@
                         <TextBox Text="{Binding NoOfSharesBuying}" />
                         <Label Content="Upper Price Limit:" />
                         <TextBox Text="{Binding UpperPriceLimit}" />
-                        <Button Content="Place Order" Command="{Binding PlaceBuyingOrderCommand}" />
+                        <Button Content="Place Buying Order" Command="{Binding PlaceBuyingOrderCommand}" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Grid.Row="2">
                         <Label Content="Share to be sold:" />
@@ -49,7 +49,7 @@
                         <TextBox Text="{Binding NoOfSharesSelling}" />
                         <Label Content="Lower Price Limit:" />
                         <TextBox Text="{Binding LowerPriceLimit}" />
-                        <Button Content="Place Order" Command="{Binding PlaceSellingOrderCommand}" />
+                        <Button Content="Place Selling Order" Command="{Binding PlaceSellingOrderCommand}" />
                     </StackPanel>
                 </Grid>
             </TabItem>
