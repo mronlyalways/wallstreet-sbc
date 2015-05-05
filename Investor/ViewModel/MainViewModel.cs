@@ -19,16 +19,15 @@ namespace Investor.ViewModel
         {
             this.data = data;
             depot = data.Depot;
-            MarketInformation = new ObservableCollection<Tuple<ShareInformation, int>>(data.LoadMarketInformation().Select(x => new Tuple<ShareInformation, int>(x, 0)));
-            data.AddNewInvestorInformationAvailableCallback(Refresh);
+            MarketInformation = new ObservableCollection<ShareInformation>(data.LoadMarketInformation());
+            data.AddNewInvestorInformationAvailableCallback(UpdateInvestorInformation);
             data.AddNewMarketInformationAvailableCallback(UpdateShareInformation);
-
             PlaceBuyingOrderCommand = new RelayCommand(PlaceBuyingOrder, () => SelectedBuyingShare != null);
             PlaceSellingOrderCommand = new RelayCommand(PlaceSellingOrder, () => SelectedSellingShare != null);
             LogoutCommand = new RelayCommand(Logout, () => true);
         }
 
-        private void Refresh(InvestorDepot d)
+        private void UpdateInvestorInformation(InvestorDepot d)
         {
             depot = d;
             RaisePropertyChanged(() => Budget);
@@ -37,16 +36,16 @@ namespace Investor.ViewModel
 
         private void UpdateShareInformation(ShareInformation info)
         {
-            MarketInformation = new ObservableCollection<Tuple<ShareInformation, int>>(MarketInformation.Where(x => x.Item1.FirmName != info.FirmName));
-            MarketInformation.Add(new Tuple<ShareInformation, int>(info, 0));
+            MarketInformation = new ObservableCollection<ShareInformation>(MarketInformation.Where(x => x.FirmName != info.FirmName));
+            MarketInformation.Add(info);
         }
 
         public string Email { get { return depot.Email; } }
 
         public double Budget { get { return depot.Budget; } }
 
-        private ObservableCollection<Tuple<ShareInformation, int>> marketInformation;
-        public ObservableCollection<Tuple<ShareInformation, int>> MarketInformation
+        private ObservableCollection<ShareInformation> marketInformation;
+        public ObservableCollection<ShareInformation> MarketInformation
         {
             get
             {
@@ -167,16 +166,16 @@ namespace Investor.ViewModel
 
         private void OnNewMarketInformationAvailable(ShareInformation nu)
         {
-            var tmp = MarketInformation.Where(x => x.Item1.FirmName.Equals(nu.FirmName));
+            var tmp = MarketInformation.Where(x => x.FirmName.Equals(nu.FirmName));
             var old = tmp.Count() == 0 ? null : tmp.First();
             if (old != null)
             {
-                MarketInformation.Insert(MarketInformation.IndexOf(old), new Tuple<ShareInformation, int>(nu, 0));
+                MarketInformation.Insert(MarketInformation.IndexOf(old), nu);
                 MarketInformation.Remove(old);
             }
             else
             {
-                MarketInformation.Add(new Tuple<ShareInformation, int>(nu, 0));
+                MarketInformation.Add(nu);
             }
         }
 

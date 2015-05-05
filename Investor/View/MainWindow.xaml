@@ -3,8 +3,27 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:m="clr-namespace:SharedFeatures.Model;assembly=SharedFeatures"
         Title="SBC Investor"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
+    <Window.Resources>
+        <ResourceDictionary>
+            <DataTemplate x:Key="ShareInformationTemplate" DataType="{x:Type m:ShareInformation}">
+                <StackPanel Orientation="Horizontal" Margin="5,10">
+                    <Label Content="Share Name:"/>
+                    <Label Content="{Binding FirmName}"/>
+                    <Label Content="Share Volume:"/>
+                    <Label Content="{Binding NoOfShares}"/>
+                    <Label Content="Purchase Volume:"/>
+                    <Label Content="{Binding PurchaseVolume}"/>
+                    <Label Content="Sales Volume:"/>
+                    <Label Content="{Binding SalesVolume}"/>
+                    <Label Content="Price per share:"/>
+                    <Label Content="{Binding PricePerShare}"/>
+                </StackPanel>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -31,8 +50,8 @@
                     </Grid.RowDefinitions>
                     <Label Grid.Column="0" Grid.Row="0" Content="Buy"/>
                     <Label Grid.Column="1" Grid.Row="0" Content="Sell"/>
-                    <ListBox Grid.Column="0" Grid.Row="1" ItemsSource="{Binding MarketInformation}" SelectedItem="{Binding SelectedBuyingShare}"/>
-                    <ListBox Grid.Column="1" Grid.Row="1" ItemsSource="{Binding OwnedShares}" SelectedItem="{Binding SelectedSellingShare}"/>
+                    <ListBox Grid.Column="0" Grid.Row="1" ItemTemplate="{StaticResource ShareInformationTemplate}" ItemsSource="{Binding MarketInformation}" SelectedItem="{Binding SelectedBuyingShare}"/>
+                    <ListBox Grid.Column="1" Grid.Row="1" ItemTemplate="{StaticResource ShareInformationTemplate}" ItemsSource="{Binding OwnedShares}" SelectedItem="{Binding SelectedSellingShare}"/>
                     <StackPanel Grid.Column="0" Grid.Row="2">
                         <Label Content="Share to be aquired:" />
                         <Label Content="{Binding SelectedBuyingShare}" />

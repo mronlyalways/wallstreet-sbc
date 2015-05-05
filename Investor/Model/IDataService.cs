@@ -26,9 +26,5 @@ namespace Investor.Model
         void AddNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback);
 
         void RemoveNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback);
-
-        void AddNewOrderAvailableCallback(Action<Order> callback);
-
-        void AddOrderRemovedCallback(Action<Order> callback);
     }
 }

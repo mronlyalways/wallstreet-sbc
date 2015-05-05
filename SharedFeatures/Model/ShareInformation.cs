@@ -12,11 +12,10 @@ namespace SharedFeatures.Model
 
         public int NoOfShares { get; set; }
 
-        public double PricePerShare { get; set; }
+        public int PurchasingVolume { get; set; }
 
-        public override string ToString()
-        {
-            return FirmName + ", " + NoOfShares + ", " + PricePerShare;
-        }
+        public int SalesVolume { get; set; }
+
+        public double PricePerShare { get; set; }
     }
 }

@@ -22,25 +22,25 @@ namespace Investor.Model
         private XcoDictionary<string, Order> orders;
         private IList<Action<ShareInformation>> marketCallbacks;
         private IList<Action<InvestorDepot>> investorDepotCallbacks;
-        private IList<Action<Order>> orderAddedCallbacks;
-        private IList<Action<Order>> orderRemovedCallbacks;
+        private IList<ShareInformation> shareInformationCache;
+        private IList<Order> orderCache;
 
         private Registration registration;
 
         public XcoDataService()
         {
+            space = new XcoSpace(0);
             marketCallbacks = new List<Action<ShareInformation>>();
             investorDepotCallbacks = new List<Action<InvestorDepot>>();
-            orderAddedCallbacks = new List<Action<Order>>();
-            orderRemovedCallbacks = new List<Action<Order>>();
-            space = new XcoSpace(0);
+            shareInformationCache = new List<ShareInformation>();
+            orderCache = new List<Order>();
             registrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", spaceServerUri);
             investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServerUri);
             investorDepots.AddNotificationForEntryAdd(OnInvestorDepotAdded);
             stockInformation = space.Get<XcoDictionary<string, Tuple<int, double>>>("StockInformation", spaceServerUri);
             stockInformation.AddNotificationForEntryAdd(OnShareInformationAdded);
             orders = space.Get<XcoDictionary<string, Order>>("Orders", spaceServerUri);
-            orders.AddNotificationForEntryAdd(OnOrderAdded);
+            orders.AddNotificationForEntryAdd(OnNewOrderAdded);
             orders.AddNotificationForEntryRemove(OnOrderRemoved);
         }
 
@@ -64,14 +64,28 @@ namespace Investor.Model
 
         public IEnumerable<ShareInformation> LoadMarketInformation()
         {
-            IList<ShareInformation> info = new List<ShareInformation>();
+            shareInformationCache = new List<ShareInformation>();
+            orderCache = new List<Order>();
+            foreach (string key in orders.Keys)
+            {
+                orderCache.Add(orders[key]);
+            }
+            
             foreach (string key in stockInformation.Keys)
             {
                 var tuple = stockInformation[key];
-                info.Add(new ShareInformation() { FirmName = key, NoOfShares = tuple.Item1, PricePerShare = tuple.Item2 });
+                
+                shareInformationCache.Add(new ShareInformation()
+                {
+                    FirmName = key,
+                    NoOfShares = tuple.Item1,
+                    PurchasingVolume = GetPurchasingVolume(orderCache, key),
+                    SalesVolume = GetSalesVolume(orderCache, key),
+                    PricePerShare = tuple.Item2
+                });
             }
 
-            return info;
+            return shareInformationCache;
         }
 
         public void AddNewMarketInformationAvailableCallback(Action<ShareInformation> callback)
@@ -87,16 +101,6 @@ namespace Investor.Model
         public void RemoveNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback)
         {
             investorDepotCallbacks.Remove(callback);
-        }
-
-        public void AddNewOrderAvailableCallback(Action<Order> callback)
-        {
-            orderAddedCallbacks.Add(callback);
-        }
-
-        public void AddOrderRemovedCallback(Action<Order> callback)
-        {
-            orderRemovedCallbacks.Add(callback);
         }
 
         private void OnInvestorDepotAdded(XcoDictionary<string, InvestorDepot> source, string key, InvestorDepot d)
@@ -117,25 +121,58 @@ namespace Investor.Model
             {
                 Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    callback(new ShareInformation() { FirmName = key, NoOfShares = info.Item1, PricePerShare = info.Item2 });
+                    callback(new ShareInformation() { FirmName = key, NoOfShares = info.Item1, PurchasingVolume = 0, SalesVolume = 0, PricePerShare = info.Item2 });
                 }), null);
             }
         }
 
-        private void OnOrderAdded(XcoDictionary<string, Order> source, string key, Order o)
+        private void OnNewOrderAdded(XcoDictionary<string, Order> source, string key, Order order)
         {
-            foreach (Action<Order> callback in orderAddedCallbacks)
+            var share = shareInformationCache.Where(x => x.FirmName == order.ShareName).First();
+
+            orderCache = orderCache.Where(x => x.Id != order.Id).ToList();
+            orderCache.Add(order);
+
+            share.PurchasingVolume = GetPurchasingVolume(orderCache, order.ShareName);
+            share.SalesVolume = GetSalesVolume(orderCache, order.ShareName);
+            foreach (Action<ShareInformation> callback in marketCallbacks)
             {
-                App.Current.Dispatcher.BeginInvoke(new Action(() => callback(o)), null);
+                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    callback(share);
+                }), null);
             }
         }
 
-        private void OnOrderRemoved(XcoDictionary<string, Order> source, string key, Order o)
+        private void OnOrderRemoved(XcoDictionary<string, Order> source, string key, Order order)
         {
-            foreach (Action<Order> callback in orderRemovedCallbacks)
+            var share = shareInformationCache.Where(x => x.FirmName == order.ShareName).First();
+            if (order.Type == Order.OrderType.BUY)
             {
-                App.Current.Dispatcher.BeginInvoke(new Action(() => callback(o)), null);
+                share.PurchasingVolume -= order.NoOfOpenShares;
             }
+            else
+            {
+                share.SalesVolume -= order.NoOfOpenShares;
+            }
+
+            foreach (Action<ShareInformation> callback in marketCallbacks)
+            {
+                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    callback(share);
+                }), null);
+            }
+        }
+
+        private int GetPurchasingVolume(IEnumerable<Order> orders, string key)
+        {
+            return orders.Where(x => x.ShareName == key && x.Type == Order.OrderType.BUY).Sum(x => x.NoOfOpenShares);
+        }
+
+        private int GetSalesVolume(IEnumerable<Order> orders, string key)
+        {
+            return orders.Where(x => x.ShareName == key && x.Type == Order.OrderType.SELL).Sum(x => x.NoOfOpenShares);
         }
 
         public void Dispose()
