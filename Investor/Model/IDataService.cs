@@ -15,6 +15,8 @@ namespace Investor.Model
         
         void Login(Registration r);
 
+        void Logout();
+
         void PlaceOrder(Order order);
 
         IEnumerable<ShareInformation> LoadMarketInformation();
@@ -24,5 +26,9 @@ namespace Investor.Model
         void AddNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback);
 
         void RemoveNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback);
+
+        void AddNewOrderAvailableCallback(Action<Order> callback);
+
+        void AddOrderRemovedCallback(Action<Order> callback);
     }
 }

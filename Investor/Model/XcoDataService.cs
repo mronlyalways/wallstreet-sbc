@@ -22,12 +22,17 @@ namespace Investor.Model
         private XcoDictionary<string, Order> orders;
         private IList<Action<ShareInformation>> marketCallbacks;
         private IList<Action<InvestorDepot>> investorDepotCallbacks;
+        private IList<Action<Order>> orderAddedCallbacks;
+        private IList<Action<Order>> orderRemovedCallbacks;
+
         private Registration registration;
 
         public XcoDataService()
         {
             marketCallbacks = new List<Action<ShareInformation>>();
             investorDepotCallbacks = new List<Action<InvestorDepot>>();
+            orderAddedCallbacks = new List<Action<Order>>();
+            orderRemovedCallbacks = new List<Action<Order>>();
             space = new XcoSpace(0);
             registrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", spaceServerUri);
             investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServerUri);
@@ -35,6 +40,8 @@ namespace Investor.Model
             stockInformation = space.Get<XcoDictionary<string, Tuple<int, double>>>("StockInformation", spaceServerUri);
             stockInformation.AddNotificationForEntryAdd(OnShareInformationAdded);
             orders = space.Get<XcoDictionary<string, Order>>("Orders", spaceServerUri);
+            orders.AddNotificationForEntryAdd(OnOrderAdded);
+            orders.AddNotificationForEntryRemove(OnOrderRemoved);
         }
 
         public InvestorDepot Depot { get; private set; }
@@ -43,6 +50,16 @@ namespace Investor.Model
         {
             registration = r;
             this.registrations.Enqueue(r);
+        }
+
+        public void Logout()
+        {
+
+        }
+
+        public void PlaceOrder(Order order)
+        {
+            orders.Add(order.Id, order);
         }
 
         public IEnumerable<ShareInformation> LoadMarketInformation()
@@ -72,9 +89,14 @@ namespace Investor.Model
             investorDepotCallbacks.Remove(callback);
         }
 
-        public void PlaceOrder(Order order)
+        public void AddNewOrderAvailableCallback(Action<Order> callback)
         {
-            orders.Add(order.Id, order);
+            orderAddedCallbacks.Add(callback);
+        }
+
+        public void AddOrderRemovedCallback(Action<Order> callback)
+        {
+            orderRemovedCallbacks.Add(callback);
         }
 
         private void OnInvestorDepotAdded(XcoDictionary<string, InvestorDepot> source, string key, InvestorDepot d)
@@ -97,6 +119,22 @@ namespace Investor.Model
                 {
                     callback(new ShareInformation() { FirmName = key, NoOfShares = info.Item1, PricePerShare = info.Item2 });
                 }), null);
+            }
+        }
+
+        private void OnOrderAdded(XcoDictionary<string, Order> source, string key, Order o)
+        {
+            foreach (Action<Order> callback in orderAddedCallbacks)
+            {
+                App.Current.Dispatcher.BeginInvoke(new Action(() => callback(o)), null);
+            }
+        }
+
+        private void OnOrderRemoved(XcoDictionary<string, Order> source, string key, Order o)
+        {
+            foreach (Action<Order> callback in orderRemovedCallbacks)
+            {
+                App.Current.Dispatcher.BeginInvoke(new Action(() => callback(o)), null);
             }
         }
 

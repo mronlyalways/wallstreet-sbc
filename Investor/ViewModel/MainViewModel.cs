@@ -19,7 +19,7 @@ namespace Investor.ViewModel
         {
             this.data = data;
             depot = data.Depot;
-            MarketInformation = new ObservableCollection<ShareInformation>(data.LoadMarketInformation());
+            MarketInformation = new ObservableCollection<Tuple<ShareInformation, int>>(data.LoadMarketInformation().Select(x => new Tuple<ShareInformation, int>(x, 0)));
             data.AddNewInvestorInformationAvailableCallback(Refresh);
             data.AddNewMarketInformationAvailableCallback(UpdateShareInformation);
 
@@ -37,16 +37,16 @@ namespace Investor.ViewModel
 
         private void UpdateShareInformation(ShareInformation info)
         {
-            MarketInformation = new ObservableCollection<ShareInformation>(MarketInformation.Where(x => x.FirmName != info.FirmName));
-            MarketInformation.Add(info);
+            MarketInformation = new ObservableCollection<Tuple<ShareInformation, int>>(MarketInformation.Where(x => x.Item1.FirmName != info.FirmName));
+            MarketInformation.Add(new Tuple<ShareInformation, int>(info, 0));
         }
 
         public string Email { get { return depot.Email; } }
 
         public double Budget { get { return depot.Budget; } }
 
-        private ObservableCollection<ShareInformation> marketInformation;
-        public ObservableCollection<ShareInformation> MarketInformation
+        private ObservableCollection<Tuple<ShareInformation, int>> marketInformation;
+        public ObservableCollection<Tuple<ShareInformation, int>> MarketInformation
         {
             get
             {
@@ -167,16 +167,16 @@ namespace Investor.ViewModel
 
         private void OnNewMarketInformationAvailable(ShareInformation nu)
         {
-            var tmp = MarketInformation.Where(x => x.FirmName.Equals(nu.FirmName));
+            var tmp = MarketInformation.Where(x => x.Item1.FirmName.Equals(nu.FirmName));
             var old = tmp.Count() == 0 ? null : tmp.First();
             if (old != null)
             {
-                MarketInformation.Insert(MarketInformation.IndexOf(old), nu);
+                MarketInformation.Insert(MarketInformation.IndexOf(old), new Tuple<ShareInformation, int>(nu, 0));
                 MarketInformation.Remove(old);
             }
             else
             {
-                MarketInformation.Add(nu);
+                MarketInformation.Add(new Tuple<ShareInformation, int>(nu, 0));
             }
         }
 
