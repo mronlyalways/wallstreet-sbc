@@ -17,7 +17,7 @@ namespace Investor.ViewModel
         {
             this.data = data;
             data.AddNewInvestorInformationAvailableCallback(OnRegistrationConfirmed);
-            SubmitCommand = new RelayCommand(Submit, () => !Email.Equals(string.Empty) && Budget > 0 && !submitted);
+            SubmitCommand = new RelayCommand(Submit, () => !Email.Equals(string.Empty) && Budget >= 0 && !submitted);
             Email = string.Empty;
             Budget = 0;
             ButtonText = "Submit";
@@ -35,6 +35,7 @@ namespace Investor.ViewModel
             {
                 email = value;
                 RaisePropertyChanged(() => Email);
+                SubmitCommand.RaiseCanExecuteChanged();
             }
         }
 

@@ -41,6 +41,8 @@ namespace Wallstreet.Model
             orders.AddNotificationForEntryRemove(OnOrderEntryRemoved);
             transactions = space.Get<XcoList<Transaction>>("Transactions", spaceServerUri);
             transactions.AddNotificationForEntryAdd(OnTransactionEntryAdded);
+
+            processPendingRegistrations();
         }
 
         public IEnumerable<ShareInformation> LoadMarketInformation()
@@ -105,6 +107,21 @@ namespace Wallstreet.Model
             transactionAddedCallbacks.Add(callback);
         }
 
+        private void processPendingRegistrations()
+        {
+            using (XcoTransaction tx = space.BeginTransaction())
+            {
+
+                while (investorDepotRegistrations.Count > 0)
+                {
+                    Registration reg = investorDepotRegistrations.Dequeue();
+                    HandleRegistration(reg);
+                }
+
+                tx.Commit();
+            }
+        }
+
         #region XCO Container Callbacks
 
         private void OnRegistrationEntryAdded(XcoQueue<Registration> source, Registration r)
@@ -113,27 +130,32 @@ namespace Wallstreet.Model
             {
                 Registration reg = source.Dequeue();
 
-                InvestorDepot depot;
-                if (investorDepots.ContainsKey(reg.Email)) 
-                {
-                   depot = investorDepots[reg.Email];
-                }
-                else
-                {
-                    depot = new InvestorDepot() { Email = reg.Email };
-                }
-
-                depot.Budget += reg.Budget;
-
-                if (investorDepots.ContainsKey(reg.Email))
-                {
-                    investorDepots[reg.Email] = depot;
-                }
-                else
-                {
-                    investorDepots.Add(reg.Email, depot);
-                }
+                HandleRegistration(reg);
                 tx.Commit();
+            }
+        }
+
+        private void HandleRegistration(Registration reg)
+        {
+            InvestorDepot depot;
+            if (investorDepots.ContainsKey(reg.Email))
+            {
+                depot = investorDepots[reg.Email];
+            }
+            else
+            {
+                depot = new InvestorDepot() { Email = reg.Email };
+            }
+
+            depot.Budget += reg.Budget;
+
+            if (investorDepots.ContainsKey(reg.Email))
+            {
+                investorDepots[reg.Email] = depot;
+            }
+            else
+            {
+                investorDepots.Add(reg.Email, depot);
             }
         }
 
