@@ -36,7 +36,21 @@ namespace Firm
                 else
                 {
                     Console.Error.WriteLine("Enter a firmname, the number of shares and the price per share.\nPress enter to exit.");
+                    name = Console.ReadLine();
+                    Int32.TryParse(Console.ReadLine(), out shares);
+                    Double.TryParse(Console.ReadLine(), out pricePerShare);
                     Console.ReadLine();
+
+                    try
+                    {
+                        XcoQueue<Request> q = space.Get<XcoQueue<Request>>("RequestQ", new Uri("xco://" + Environment.MachineName + ":" + 9000));
+                        q.Enqueue(new Request() { FirmName = name, Shares = shares, PricePerShare = pricePerShare });
+                    }
+                    catch (XcoException)
+                    {
+                        Console.WriteLine("Unable to reach server.\nPress enter to exit.");
+                        Console.ReadLine();
+                    }
                 }
             }
         }
