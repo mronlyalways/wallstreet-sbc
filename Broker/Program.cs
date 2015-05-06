@@ -15,6 +15,7 @@ namespace Broker
         private static readonly Uri spaceServer = new Uri("xco://" + Environment.MachineName + ":" + 9000);
         private static XcoSpace space;
         private static XcoDictionary<string, Order> orders;
+        private static XcoDictionary<string, string> orderCoordinator;
         private static XcoDictionary<string, InvestorDepot> investorDepots;
         private static XcoDictionary<string, FirmDepot> firmDepots;
         private static XcoList<Transaction> transactions;
@@ -23,34 +24,43 @@ namespace Broker
 
         static void Main(string[] args)
         {
-            space = new XcoSpace(0);
-            transactions = space.Get<XcoList<Transaction>>("Transactions", spaceServer);
-            orders = space.Get<XcoDictionary<string, Order>>("Orders", spaceServer);
-            investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServer);
-            firmDepots = space.Get<XcoDictionary<string, FirmDepot>>("FirmDepots", spaceServer);
-            XcoDictionary<string, Tuple<int, double>> stockInformation = space.Get<XcoDictionary<string, Tuple<int, double>>>("StockInformation", spaceServer);
-            orders.AddNotificationForEntryAdd(OnOrderEntryAdded);
-            orders.AddNotificationForEntryRemove(OnOrderEntryRemoved);
-            stockInformation.AddNotificationForEntryAdd(OnStockInformationEntryAdded);
-
-            pendingOrders = new List<Order>();
-            stockPriceCache = new Dictionary<string, double>();
-
-            using (XcoTransaction transaction = space.BeginTransaction())
+            try
             {
-                foreach (string key in orders.Keys)
-                {
-                    pendingOrders.Add(orders[key]);
-                }
+                space = new XcoSpace(0);
+                transactions = space.Get<XcoList<Transaction>>("Transactions", spaceServer);
+                orders = space.Get<XcoDictionary<string, Order>>("Orders", spaceServer);
+                orderCoordinator = space.Get<XcoDictionary<string, string>>("OrderCoordinator", spaceServer);
+                investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServer);
+                firmDepots = space.Get<XcoDictionary<string, FirmDepot>>("FirmDepots", spaceServer);
+                XcoDictionary<string, Tuple<int, double>> stockInformation = space.Get<XcoDictionary<string, Tuple<int, double>>>("StockInformation", spaceServer);
+                stockInformation.AddNotificationForEntryAdd(OnStockInformationEntryAdded);
+                orders.AddNotificationForEntryAdd(OnOrderEntryAdded);
+                orders.AddNotificationForEntryRemove(OnOrderEntryRemoved);
+                pendingOrders = new List<Order>();
+                stockPriceCache = new Dictionary<string, double>();
 
-                foreach (string key in stockInformation.Keys)
+                using (XcoTransaction transaction = space.BeginTransaction())
                 {
-                    stockPriceCache.Add(key, stockInformation[key].Item2);
-                }
+                    foreach (string key in orders.Keys)
+                    {
+                        pendingOrders.Add(orders[key]);
+                    }
 
-                transaction.Commit();
+                    foreach (string key in stockInformation.Keys)
+                    {
+                        stockPriceCache.Add(key, stockInformation[key].Item2);
+                    }
+
+                    transaction.Commit();
+                }
+                HandleRequests();
             }
-            HandleRequests();
+            catch (XcoException)
+            {
+                Console.WriteLine("Error: Unable to reach server.\nPress enter to exit ...");
+                Console.ReadLine();
+                if (space != null && space.IsOpen) { space.Close(); }
+            }
         }
 
         private static void HandleRequests()
@@ -68,32 +78,43 @@ namespace Broker
                     while (true)
                     {
                         request = q.Dequeue(-1);
-
-                        if (firmDepot.TryGetValue(request.FirmName, out depot))
+                        using (XcoTransaction transaction = space.BeginTransaction())
                         {
-                            depot.OwnedShares += request.Shares;
-                            firmDepot[request.FirmName] = depot;
-                            var info = stockInformation[request.FirmName];
-                            stockInformation.Add(request.FirmName, new Tuple<int, double>(info.Item1 + request.Shares, info.Item2 + request.PricePerShare));
-                            Console.WriteLine("Add {0} shares to existing account \"{1}\"", request.Shares, request.FirmName);
+                            try
+                            {
+                                if (firmDepot.TryGetValue(request.FirmName, out depot))
+                                {
+                                    depot.OwnedShares += request.Shares;
+                                    firmDepot[request.FirmName] = depot;
+                                    var info = stockInformation[request.FirmName];
+                                    stockInformation[request.FirmName] = new Tuple<int, double>(info.Item1 + request.Shares, info.Item2);
+                                    Console.WriteLine("Add {0} shares to existing account \"{1}\"", request.Shares, request.FirmName);
+                                }
+                                else
+                                {
+                                    firmDepot.Add(request.FirmName, new FirmDepot() { FirmName = request.FirmName, OwnedShares = request.Shares });
+                                    stockInformation.Add(request.FirmName, new Tuple<int, double>(request.Shares, request.PricePerShare));
+                                    Console.WriteLine("Create new firm depot for \"{0}\" with {1} shares, selling for {2}", request.FirmName, request.Shares, request.PricePerShare);
+                                }
+                                var orderId = request.FirmName + DateTime.Now.Ticks.ToString();
+                                orders.Add(orderId, (new Order()
+                                {
+                                    Id = orderId,
+                                    InvestorId = request.FirmName,
+                                    ShareName = request.FirmName,
+                                    Type = Order.OrderType.SELL,
+                                    Limit = 0,
+                                    NoOfProcessedShares = 0,
+                                    TotalNoOfShares = request.Shares
+                                }));
+                                transaction.Commit();
+                            }
+                            catch (Exception)
+                            {
+                                transaction.Rollback();
+                                q.Enqueue(request);
+                            }
                         }
-                        else
-                        {
-                            firmDepot.Add(request.FirmName, new FirmDepot() { FirmName = request.FirmName, OwnedShares = request.Shares });
-                            stockInformation.Add(request.FirmName, new Tuple<int, double>(request.Shares, request.PricePerShare));
-                            Console.WriteLine("Create new firm depot for \"{0}\" with {1} shares, selling for {2}", request.FirmName, request.Shares, request.PricePerShare);
-                        }
-                        var orderId = request.FirmName + DateTime.Now.Ticks.ToString();
-                        orders.Add(orderId, (new Order()
-                        {
-                            Id = orderId,
-                            InvestorId = request.FirmName,
-                            ShareName = request.FirmName,
-                            Type = Order.OrderType.SELL,
-                            Limit = 0,
-                            NoOfProcessedShares = 0,
-                            TotalNoOfShares = request.Shares
-                        }));
                     }
                 }
                 catch (XcoException e)
@@ -107,10 +128,11 @@ namespace Broker
 
         private static void OnOrderEntryAdded(XcoDictionary<string, Order> source, string key, Order order)
         {
-            if (!pendingOrders.Contains(order) && order.Status != Order.OrderStatus.DONE)
+            if (LockId(order.Id) && !pendingOrders.Contains(order) && order.Status != Order.OrderStatus.DONE)
             {
                 ProcessOrder(order);
                 pendingOrders = pendingOrders.Where(x => x.Status != Order.OrderStatus.DONE).ToList();
+                ReleaseLock(order.Id);
             }
         }
 
@@ -122,10 +144,45 @@ namespace Broker
         private static void OnStockInformationEntryAdded(XcoDictionary<string, Tuple<int, double>> source, string key, Tuple<int, double> value)
         {
             stockPriceCache[key] = value.Item2;
-            foreach (Order o in pendingOrders.Where(x => x.Type == Order.OrderType.BUY && x.ShareName == key))
+            LockId(key);
+            for (int i = 0; i < pendingOrders.Count; i++)
             {
-                ProcessOrder(o);
+                var o = pendingOrders[i];
+                if (o.Type == Order.OrderType.BUY && o.ShareName == key)
+                {
+                    
+                    ProcessOrder(o);
+                    pendingOrders = pendingOrders.Where(x => x.Status != Order.OrderStatus.DONE).ToList();
+                }
             }
+            ReleaseLock(key);
+        }
+
+        private static bool LockId(string id)
+        {
+            bool work;
+            try
+            {
+                using (XcoTransaction transaction = space.BeginTransaction())
+                {
+                    string o;
+                    work = !orderCoordinator.TryGetValue(id, out o, false);
+                    {
+                        orderCoordinator[id] = id;
+                    }
+                    transaction.Commit();
+                }
+            }
+            catch (XcoException)
+            {
+                return false;
+            }
+            return work;
+        }
+
+        private static void ReleaseLock(string id)
+        {
+            orderCoordinator.Remove(id);
         }
 
         private static void ProcessOrder(Order order)
@@ -176,7 +233,8 @@ namespace Broker
                 }
                 else
                 {
-
+                    pendingOrders.Remove(newOrder);
+                    orders.Remove(order.ShareName);
                 }
             }
         }
@@ -202,7 +260,17 @@ namespace Broker
             var transactions = new List<Transaction>();
             var usedOrders = new List<Order>();
             var sharesProcessedTotal = 0;
-            var matches = counterParts.Where(x => x.ShareName.Equals(order.ShareName) && x.Limit <= stockPrice && order.Limit >= stockPrice).ToList();
+            IList<Order> matches;
+            bool buyMode = order.Type == Order.OrderType.BUY;
+
+            if (buyMode)
+            {
+                matches = counterParts.Where(x => x.ShareName.Equals(order.ShareName) && x.Limit <= stockPrice && order.Limit >= stockPrice).ToList();
+            }
+            else
+            {
+                matches = counterParts.Where(x => x.ShareName.Equals(order.ShareName) && x.Limit >= stockPrice && order.Limit <= stockPrice).ToList();
+            }
 
             while (matches.Count > 0 && sharesProcessedTotal <= order.NoOfOpenShares)
             {
@@ -215,10 +283,10 @@ namespace Broker
                     TransactionId = order.Id + match.Id,
                     BrokerId = 1L,
                     ShareName = order.ShareName,
-                    BuyerId = order.InvestorId,
-                    SellerId = match.InvestorId,
-                    BuyingOrderId = order.Id,
-                    SellingOrderId = match.Id,
+                    BuyerId = buyMode ? order.InvestorId : match.InvestorId,
+                    SellerId = buyMode ? match.InvestorId : order.InvestorId,
+                    BuyingOrderId = buyMode ? order.Id : match.Id,
+                    SellingOrderId = buyMode ? match.Id : order.Id,
                     NoOfSharesSold = sharesProcessed,
                     PricePerShare = stockPrice
                 });

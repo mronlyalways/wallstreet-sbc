@@ -40,7 +40,7 @@ namespace SharedFeatures.Model
         public override bool Equals(object obj)
         {
             var other = obj as Order;
-            if (obj != null)
+            if (other != null)
             {
                 var result = Id.Equals(other.Id) 
                     && InvestorId.Equals(other.InvestorId) 

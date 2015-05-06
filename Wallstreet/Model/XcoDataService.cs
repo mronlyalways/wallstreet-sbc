@@ -161,27 +161,27 @@ namespace Wallstreet.Model
 
         private void OnShareInformationEntryAdded(XcoDictionary<string, Tuple<int, double>> source, string key, Tuple<int, double> info)
         {
-            ExecuteOnGUIThread<ShareInformation>(marketCallbacks, new ShareInformation() { FirmName = key, NoOfShares = info.Item1, PricePerShare = info.Item2 });
+            ExecuteOnGUIThread(marketCallbacks, new ShareInformation() { FirmName = key, NoOfShares = info.Item1, PricePerShare = info.Item2 });
         }
 
         private void OnOrderEntryAdded(XcoDictionary<string, Order> source, string key, Order order)
         {
-            ExecuteOnGUIThread<Order>(orderAddedCallbacks, order);
+            ExecuteOnGUIThread(orderAddedCallbacks, order);
         }
 
         private void OnOrderEntryRemoved(XcoDictionary<string, Order> source, string key, Order order)
         {
-            ExecuteOnGUIThread<Order>(orderRemovedCallbacks, order);
+            ExecuteOnGUIThread(orderRemovedCallbacks, order);
         }
 
         private void OnTransactionEntryAdded(XcoList<Transaction> source, Transaction transaction, int index)
         {
-            ExecuteOnGUIThread<Transaction>(transactionAddedCallbacks, transaction);
+            ExecuteOnGUIThread(transactionAddedCallbacks, transaction);
         }
 
         #endregion
 
-        private void ExecuteOnGUIThread<T>(IList<Action<T>> callbacks, T arg)
+        private void ExecuteOnGUIThread<T>(IEnumerable<Action<T>> callbacks, T arg)
         {
             foreach (Action<T> callback in callbacks)
             {

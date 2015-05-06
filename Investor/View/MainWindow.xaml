@@ -8,18 +8,45 @@
         DataContext="{Binding Main, Source={StaticResource Locator}}">
     <Window.Resources>
         <ResourceDictionary>
-            <DataTemplate x:Key="ShareInformationTemplate" DataType="{x:Type m:ShareInformation}">
+            <DataTemplate x:Key="BuyingShareInformationTemplate" DataType="{x:Type m:ShareInformation}">
                 <StackPanel Orientation="Horizontal" Margin="5,10">
                     <Label Content="Share Name:"/>
                     <Label Content="{Binding FirmName}"/>
                     <Label Content="Share Volume:"/>
                     <Label Content="{Binding NoOfShares}"/>
                     <Label Content="Purchase Volume:"/>
-                    <Label Content="{Binding PurchaseVolume}"/>
+                    <Label Content="{Binding PurchasingVolume}"/>
                     <Label Content="Sales Volume:"/>
                     <Label Content="{Binding SalesVolume}"/>
                     <Label Content="Price per share:"/>
                     <Label Content="{Binding PricePerShare}"/>
+                </StackPanel>
+            </DataTemplate>
+            <DataTemplate x:Key="SellingShareInformationTemplate" DataType="{x:Type m:ShareInformation}">
+                <StackPanel Orientation="Horizontal" Margin="5,10">
+                    <Label Content="Share Name:"/>
+                    <Label Content="{Binding FirmName}"/>
+                    <Label Content="Share Volume:"/>
+                    <Label Content="{Binding NoOfShares}"/>
+                    <Label Content="Purchase Volume:"/>
+                </StackPanel>
+            </DataTemplate>
+            <DataTemplate x:Key="OrderTemplate" DataType="{x:Type m:Order}">
+                <StackPanel Orientation="Horizontal" Margin="5,10">
+                    <Label Content="Order Type:"/>
+                    <Label Content="{Binding Type}"/>
+                    <Label Content="Status:"/>
+                    <Label Content="{Binding Status}"/>
+                    <Label Content="Buyer/Seller:"/>
+                    <Label Content="{Binding InvestorId}"/>
+                    <Label Content="Share Name:"/>
+                    <Label Content="{Binding ShareName}"/>
+                    <Label Content="Total Shares:"/>
+                    <Label Content="{Binding TotalNoOfShares}"/>
+                    <Label Content="Processed Shares:"/>
+                    <Label Content="{Binding NoOfProcessedShares}"/>
+                    <Label Content="Price Limit:"/>
+                    <Label Content="{Binding Limit}"/>
                 </StackPanel>
             </DataTemplate>
         </ResourceDictionary>
@@ -50,8 +77,8 @@
                     </Grid.RowDefinitions>
                     <Label Grid.Column="0" Grid.Row="0" Content="Buy"/>
                     <Label Grid.Column="1" Grid.Row="0" Content="Sell"/>
-                    <ListBox Grid.Column="0" Grid.Row="1" ItemTemplate="{StaticResource ShareInformationTemplate}" ItemsSource="{Binding MarketInformation}" SelectedItem="{Binding SelectedBuyingShare}"/>
-                    <ListBox Grid.Column="1" Grid.Row="1" ItemTemplate="{StaticResource ShareInformationTemplate}" ItemsSource="{Binding OwnedShares}" SelectedItem="{Binding SelectedSellingShare}"/>
+                    <ListBox Grid.Column="0" Grid.Row="1" ItemTemplate="{StaticResource BuyingShareInformationTemplate}" ItemsSource="{Binding MarketInformation}" SelectedItem="{Binding SelectedBuyingShare}"/>
+                    <ListBox Grid.Column="1" Grid.Row="1" ItemTemplate="{StaticResource SellingShareInformationTemplate}" ItemsSource="{Binding OwnedShares}" SelectedItem="{Binding SelectedSellingShare}"/>
                     <StackPanel Grid.Column="0" Grid.Row="2">
                         <Label Content="Share to be aquired:" />
                         <Label Content="{Binding SelectedBuyingShare}" />
@@ -72,7 +99,16 @@
                     </StackPanel>
                 </Grid>
             </TabItem>
-            <TabItem Header="Orders"/>
+            <TabItem Header="Pending Orders">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <ListBox ItemTemplate="{StaticResource OrderTemplate}" ItemsSource="{Binding PendingOrders}" SelectedItem="{Binding SelectedPendingOrder}" />
+                    <Button Grid.Row="1" Content="Cancel Order" Command="{Binding CancelPendingOrderCommand}" />
+                </Grid>
+            </TabItem>
             <TabItem Header="Account"/>
         </TabControl>
     </Grid>

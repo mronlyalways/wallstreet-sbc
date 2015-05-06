@@ -18,12 +18,16 @@ namespace Investor.ViewModel
         public MainViewModel(IDataService data)
         {
             this.data = data;
-            depot = data.Depot;
+            depot = data.LoadInvestorInformation();
             MarketInformation = new ObservableCollection<ShareInformation>(data.LoadMarketInformation());
+            OwnedShares = new ObservableCollection<ShareInformation>(depot.Shares.Select(x => new ShareInformation { FirmName = x.Key, NoOfShares = x.Value }));
+            PendingOrders = new ObservableCollection<Order>(data.LoadPendingOrders());
             data.AddNewInvestorInformationAvailableCallback(UpdateInvestorInformation);
             data.AddNewMarketInformationAvailableCallback(UpdateShareInformation);
+            data.AddNewPendingOrdersCallback(o => PendingOrders = new ObservableCollection<Order>(o));
             PlaceBuyingOrderCommand = new RelayCommand(PlaceBuyingOrder, () => SelectedBuyingShare != null);
             PlaceSellingOrderCommand = new RelayCommand(PlaceSellingOrder, () => SelectedSellingShare != null);
+            CancelPendingOrderCommand = new RelayCommand(CancelPendingOrder, () => SelectedPendingOrder != null);
             LogoutCommand = new RelayCommand(Logout, () => true);
         }
 
@@ -72,6 +76,20 @@ namespace Investor.ViewModel
             }
         }
 
+        private ObservableCollection<Order> pendingOrders;
+        public ObservableCollection<Order> PendingOrders
+        {
+            get
+            {
+                return pendingOrders;
+            }
+            set
+            {
+                pendingOrders = value;
+                RaisePropertyChanged(() => PendingOrders);
+            }
+        }
+
         private ShareInformation selectedBuyingShare;
         public ShareInformation SelectedBuyingShare
         {
@@ -99,6 +117,21 @@ namespace Investor.ViewModel
                 selectedSellingShare = value;
                 RaisePropertyChanged(() => SelectedSellingShare);
                 PlaceSellingOrderCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        private Order selectedPendingOrder;
+        public Order SelectedPendingOrder
+        {
+            get
+            {
+                return selectedPendingOrder;
+            }
+            set
+            {
+                selectedPendingOrder = value;
+                RaisePropertyChanged(() => SelectedPendingOrder);
+                CancelPendingOrderCommand.RaiseCanExecuteChanged();
             }
         }
 
@@ -162,6 +195,8 @@ namespace Investor.ViewModel
 
         public RelayCommand PlaceSellingOrderCommand { get; private set; }
 
+        public RelayCommand CancelPendingOrderCommand { get; private set; }
+
         public RelayCommand LogoutCommand { get; private set; }
 
         private void OnNewMarketInformationAvailable(ShareInformation nu)
@@ -191,6 +226,11 @@ namespace Investor.ViewModel
             var id = Email + DateTime.Now.Ticks.ToString();
             var order = new Order() { Id = id, InvestorId = Email, Type = Order.OrderType.SELL, ShareName = SelectedSellingShare.FirmName, Limit = LowerPriceLimit, TotalNoOfShares = NoOfSharesSelling, NoOfProcessedShares = 0 };
             data.PlaceOrder(order);
+        }
+
+        private void CancelPendingOrder()
+        {
+            data.CancelOrder(SelectedPendingOrder);
         }
 
         private void Logout()

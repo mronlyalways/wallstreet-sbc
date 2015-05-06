@@ -45,6 +45,10 @@ namespace SpaceServer
                 space.Add(transactions, "Transactions");
                 transactions.AddNotificationForEntryAdd((s, t, i) => Console.WriteLine("New transaction between {1} and {2}, transfering {2} shares for {3} Euros per share.", t.SellerId, t.BuyerId, t.NoOfSharesSold, t.PricePerShare));
 
+                var orderCoordinator = new XcoDictionary<string, string>();
+                space.Add(orderCoordinator, "OrderCoordinator");
+                orderCoordinator.AddNotificationForEntryAdd((s, k, v) => Console.WriteLine("New order with ID {0} in coordination container.", v));
+
                 Console.WriteLine("Press enter to quit ...");
                 Console.ReadLine();
                 space.Remove(qRequests);
