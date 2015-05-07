@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using XcoSpaces;
 using XcoSpaces.Collections;
+using XcoSpaces.Exceptions;
 using SharedFeatures;
 using SharedFeatures.Model;
 using GalaSoft.MvvmLight;
@@ -20,6 +21,7 @@ namespace Investor.Model
         private XcoDictionary<string, InvestorDepot> investorDepots;
         private XcoDictionary<string, Tuple<int, double>> stockInformation;
         private XcoDictionary<string, Order> orders;
+        private XcoQueue<Order> orderQueue;
         private IList<Action<ShareInformation>> marketCallbacks;
         private IList<Action<InvestorDepot>> investorDepotCallbacks;
         private IList<Action<IEnumerable<Order>>> pendingOrdersCallback;
@@ -44,7 +46,8 @@ namespace Investor.Model
             stockInformation.AddNotificationForEntryAdd(OnShareInformationAdded);
             orders = space.Get<XcoDictionary<string, Order>>("Orders", spaceServerUri);
             orders.AddNotificationForEntryAdd(OnNewOrderAdded);
-            orders.AddNotificationForEntryRemove(OnOrderRemoved);
+            orderQueue = space.Get<XcoQueue<Order>>("OrderQueue", spaceServerUri);
+            orderQueue.AddNotificationForEntryEnqueued(OnNewOrderAdded);
         }
 
         public void Login(Registration r)
@@ -55,12 +58,23 @@ namespace Investor.Model
 
         public void PlaceOrder(Order order)
         {
-            orders.Add(order.Id, order);
+            orderQueue.Enqueue(order);
         }
 
         public void CancelOrder(Order order)
         {
-            orders.Remove(order.Id);
+            using (XcoTransaction tx = space.BeginTransaction())
+            {
+                try
+                {
+                    if (orders.ContainsKey(order.Id))
+                    {
+                        orders.Remove(order.Id);
+                    }
+                } catch (XcoException) {
+                    tx.Rollback();
+                }
+            }
         }
 
         public InvestorDepot LoadInvestorInformation()
@@ -146,9 +160,10 @@ namespace Investor.Model
             UpdateShareInformation(order);
         }
 
-        private void OnOrderRemoved(XcoDictionary<string, Order> source, string key, Order order)
+        private void OnNewOrderAdded(XcoQueue<Order> source, Order order)
         {
             orderCache = orderCache.Where(x => x.Id != order.Id).ToList();
+            orderCache.Add(order);
             UpdateShareInformation(order);
         }
 

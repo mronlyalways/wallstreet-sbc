@@ -15,12 +15,12 @@ namespace Broker
         private static readonly Uri spaceServer = new Uri("xco://" + Environment.MachineName + ":" + 9000);
         private static XcoSpace space;
         private static XcoDictionary<string, Order> orders;
-        private static XcoDictionary<string, string> orderCoordinator;
+        private static XcoQueue<Order> orderQueue;
         private static XcoDictionary<string, InvestorDepot> investorDepots;
         private static XcoDictionary<string, FirmDepot> firmDepots;
         private static XcoList<Transaction> transactions;
-        private static IList<Order> pendingOrders;
-        private static Dictionary<string, double> stockPriceCache;
+        private static XcoDictionary<string, Tuple<int, double>> stockInformation;
+        private static XcoQueue<string> stockInformationUpdates;
 
         static void Main(string[] args)
         {
@@ -29,30 +29,15 @@ namespace Broker
                 space = new XcoSpace(0);
                 transactions = space.Get<XcoList<Transaction>>("Transactions", spaceServer);
                 orders = space.Get<XcoDictionary<string, Order>>("Orders", spaceServer);
-                orderCoordinator = space.Get<XcoDictionary<string, string>>("OrderCoordinator", spaceServer);
+                orderQueue = space.Get<XcoQueue<Order>>("OrderQueue", spaceServer);
                 investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServer);
                 firmDepots = space.Get<XcoDictionary<string, FirmDepot>>("FirmDepots", spaceServer);
-                XcoDictionary<string, Tuple<int, double>> stockInformation = space.Get<XcoDictionary<string, Tuple<int, double>>>("StockInformation", spaceServer);
-                stockInformation.AddNotificationForEntryAdd(OnStockInformationEntryAdded);
-                orders.AddNotificationForEntryAdd(OnOrderEntryAdded);
-                orders.AddNotificationForEntryRemove(OnOrderEntryRemoved);
-                pendingOrders = new List<Order>();
-                stockPriceCache = new Dictionary<string, double>();
+                stockInformation = space.Get<XcoDictionary<string, Tuple<int, double>>>("StockInformation", spaceServer);
+                stockInformationUpdates = space.Get<XcoQueue<string>>("StockInformationUpdates", spaceServer);
+              
+                stockInformationUpdates.AddNotificationForEntryEnqueued(OnStockInformationEntryAdded);
+                orderQueue.AddNotificationForEntryEnqueued(OnOrderEntryAdded);
 
-                using (XcoTransaction transaction = space.BeginTransaction())
-                {
-                    foreach (string key in orders.Keys)
-                    {
-                        pendingOrders.Add(orders[key]);
-                    }
-
-                    foreach (string key in stockInformation.Keys)
-                    {
-                        stockPriceCache.Add(key, stockInformation[key].Item2);
-                    }
-
-                    transaction.Commit();
-                }
                 HandleRequests();
             }
             catch (XcoException)
@@ -97,7 +82,7 @@ namespace Broker
                                     Console.WriteLine("Create new firm depot for \"{0}\" with {1} shares, selling for {2}", request.FirmName, request.Shares, request.PricePerShare);
                                 }
                                 var orderId = request.FirmName + DateTime.Now.Ticks.ToString();
-                                orders.Add(orderId, (new Order()
+                                orderQueue.Enqueue((new Order()
                                 {
                                     Id = orderId,
                                     InvestorId = request.FirmName,
@@ -126,68 +111,229 @@ namespace Broker
             }
         }
 
-        private static void OnOrderEntryAdded(XcoDictionary<string, Order> source, string key, Order order)
+        private static void OnOrderEntryAdded(XcoQueue<Order> source, Order order)
         {
-            if (LockId(order.Id) && !pendingOrders.Contains(order) && order.Status != Order.OrderStatus.DONE)
+            using (XcoTransaction tx = space.BeginTransaction())
             {
-                ProcessOrder(order);
-                pendingOrders = pendingOrders.Where(x => x.Status != Order.OrderStatus.DONE).ToList();
-                ReleaseLock(order.Id);
-            }
-        }
-
-        private static void OnOrderEntryRemoved(XcoDictionary<string, Order> source, string key, Order order)
-        {
-            pendingOrders.Remove(order);
-        }
-
-        private static void OnStockInformationEntryAdded(XcoDictionary<string, Tuple<int, double>> source, string key, Tuple<int, double> value)
-        {
-            stockPriceCache[key] = value.Item2;
-            LockId(key);
-            for (int i = 0; i < pendingOrders.Count; i++)
-            {
-                var o = pendingOrders[i];
-                if (o.Type == Order.OrderType.BUY && o.ShareName == key)
+                try
                 {
-                    
-                    ProcessOrder(o);
-                    pendingOrders = pendingOrders.Where(x => x.Status != Order.OrderStatus.DONE).ToList();
-                }
-            }
-            ReleaseLock(key);
-        }
+                    Order o = source.Dequeue(false);
 
-        private static bool LockId(string id)
-        {
-            bool work;
-            try
-            {
-                using (XcoTransaction transaction = space.BeginTransaction())
-                {
-                    string o;
-                    work = !orderCoordinator.TryGetValue(id, out o, false);
+                    if (!o.Status.Equals(Order.OrderStatus.DONE))
                     {
-                        orderCoordinator[id] = id;
+                        ProcessOrder(ref o);
                     }
-                    transaction.Commit();
+                }
+                catch (XcoException)
+                {
+                    tx.Rollback();
                 }
             }
-            catch (XcoException)
+        }
+
+        private static void OnStockInformationEntryAdded(XcoQueue<string> source, string value)
+        {
+
+            string key = null;
+            using (XcoTransaction tx = space.BeginTransaction())
             {
-                return false;
+                try { 
+                    key = source.Dequeue(false);
+                    Console.WriteLine("Process update for share: " + key);
+                    tx.Commit();
+                } catch(XcoException) {
+                    //Queue seems to be emtpy already
+                    tx.Rollback();
+                }
+
             }
-            return work;
+
+            Order purchaseOrder = null;
+
+            using (XcoTransaction tx = space.BeginTransaction())
+            {
+
+                if (key != null)
+                {
+
+                    try
+                    {
+                        foreach (String orderId in orders.Keys)
+                        {
+                            Order o = orders[orderId];
+                            if (o.ShareName == key && o.Type.Equals(Order.OrderType.BUY) && o.Limit <= stockInformation[key].Item2)
+                            {
+                                orders.Remove(o.Id);
+                                purchaseOrder = o;
+                            }
+                        }
+                    }
+                    catch (XcoException e)
+                    {
+                        Console.WriteLine(e.Message);
+                        tx.Rollback();
+                    }
+
+                }
+            }
+
+            if (purchaseOrder != null)
+            {
+                ProcessOrder(ref purchaseOrder);
+            }
         }
 
-        private static void ReleaseLock(string id)
+        private static void ProcessOrder(ref Order order)
         {
-            orderCoordinator.Remove(id);
-        }
+            using (XcoTransaction tx = space.BeginTransaction())
+            {
+                try
+                {
+                    Tuple<int, double> temp;
+                    Double sharePrice;
+                    Console.WriteLine("1");
+                    if (stockInformation.TryGetValue(order.ShareName, out temp))
+                    {
+                        sharePrice = temp.Item2;
 
-        private static void ProcessOrder(Order order)
-        {
-            var result = MatchOrders(order, pendingOrders.Where(x => x.Type != order.Type).ToList(), stockPriceCache[order.ShareName]);
+                        Order useMatch = null;
+
+                        List<String> keys = new List<string>(orders.Keys);
+                        keys = keys.OrderBy(x => x).ToList();
+                        Console.WriteLine("2");
+                        foreach (String orderId in orders.Keys)
+                        {
+                            Order o = orders[orderId];
+                            if (o.ShareName.Equals(order.ShareName))
+                            {
+                                if ((order.Type.Equals(Order.OrderType.BUY) && order.Limit >= sharePrice && o.Type.Equals(Order.OrderType.SELL) && o.Limit <= sharePrice) ||
+                                    (order.Type.Equals(Order.OrderType.SELL) && order.Limit <= sharePrice && o.Type.Equals(Order.OrderType.BUY) && o.Limit >= sharePrice))
+                                {
+                                    orders.Remove(o.Id);
+                                    useMatch = o;
+                                    break;
+                                }
+                            }
+                        }
+                        Console.WriteLine("3");
+
+                        if (useMatch != null)
+                        {
+                            Console.WriteLine("4");
+                            Double stockPrice = sharePrice;
+                            Console.WriteLine("Processes matching orders: " + order.Id + " " + useMatch.Id);
+
+
+                            var sharesProcessed = Math.Min(order.NoOfOpenShares, useMatch.NoOfOpenShares);
+
+                            var totalCost = sharesProcessed * stockPrice;
+
+                            Boolean buyMode = order.Type.Equals(Order.OrderType.BUY) ? true : false;
+
+                            Transaction t = new Transaction()
+                            {
+                                TransactionId = order.Id + useMatch.Id,
+                                BrokerId = 1L,
+                                ShareName = order.ShareName,
+                                BuyerId = buyMode ? order.InvestorId : useMatch.InvestorId,
+                                SellerId = buyMode ? useMatch.InvestorId : order.InvestorId,
+                                BuyingOrderId = buyMode ? order.Id : useMatch.Id,
+                                SellingOrderId = buyMode ? useMatch.Id : order.Id,
+                                NoOfSharesSold = sharesProcessed,
+                                PricePerShare = stockPrice
+                            };
+
+                            Boolean affordable = (t.TotalCost + t.Provision) <= investorDepots[t.BuyerId].Budget;
+                            Boolean enoughShares = false;
+
+                            if (investorDepots.ContainsKey(t.SellerId))
+                            {
+                                enoughShares = investorDepots[t.SellerId].Shares[t.ShareName] >= t.NoOfSharesSold;
+                            }
+                            else if (firmDepots.ContainsKey(t.SellerId))
+                            {
+                                enoughShares = firmDepots[t.SellerId].OwnedShares >= t.NoOfSharesSold;
+                            }
+
+                            if (affordable && enoughShares)
+                            {
+
+                                order.NoOfProcessedShares += sharesProcessed;
+                                useMatch.NoOfProcessedShares += sharesProcessed;
+                                order.Status = (order.NoOfOpenShares == 0) ? Order.OrderStatus.DONE : Order.OrderStatus.PARTIAL;
+                                useMatch.Status = (useMatch.NoOfOpenShares == 0) ? Order.OrderStatus.DONE : Order.OrderStatus.PARTIAL;
+
+                                var buyer = investorDepots[t.BuyerId];
+                                buyer.Budget -= (t.TotalCost + t.Provision);
+                                buyer.AddShares(t.ShareName, t.NoOfSharesSold);
+                                investorDepots[t.BuyerId] = buyer;
+
+                                InvestorDepot seller;
+                                if (investorDepots.TryGetValue(t.SellerId, out seller)) // if yes, then investor, else firm
+                                {
+                                    seller.Budget += (t.TotalCost);
+                                    seller.RemoveShares(t.ShareName, t.NoOfSharesSold);
+                                    investorDepots[t.SellerId] = seller;
+                                }
+                                else
+                                {
+                                    var firm = firmDepots[t.ShareName];
+                                    firm.OwnedShares -= t.NoOfSharesSold;
+                                    firmDepots[t.ShareName] = firm;
+                                }
+                                transactions.Add(t);
+
+                                orderQueue.Enqueue(order);
+                                orderQueue.Enqueue(useMatch);
+                            }
+                            else
+                            {
+                                if (!affordable && enoughShares)
+                                {
+                                    if (order.Type.Equals(Order.OrderType.SELL))
+                                    {
+                                        orderQueue.Enqueue(order);
+                                    }
+                                    else
+                                    {
+                                        orderQueue.Enqueue(useMatch);
+                                    }
+                                }
+                                else if (affordable && !enoughShares)
+                                {
+                                    if (order.Type.Equals(Order.OrderType.BUY))
+                                    {
+                                        orderQueue.Enqueue(order);
+                                    }
+                                    else
+                                    {
+                                        orderQueue.Enqueue(useMatch);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            orders.Add(order.Id, order);
+                        }
+                    }
+                    else
+                    {
+                        orderQueue.Enqueue(order);
+                    }
+
+                    tx.Commit();
+                }
+                catch (XcoException e)
+                {
+                    Console.WriteLine(e.Message);
+                    tx.Rollback();
+                    orderQueue.Enqueue(order);
+                }
+
+            }
+
+            /*
             var newOrder = result.Item1;
             var matches = result.Item2;
             var newTransactions = result.Item3;
@@ -237,6 +383,7 @@ namespace Broker
                     orders.Remove(order.ShareName);
                 }
             }
+             */
         }
 
         private static bool IsAffordableForBuyer(IEnumerable<Transaction> transactions)
@@ -254,29 +401,20 @@ namespace Broker
         /// <param name="order">Buying or selling order that should be matched</param>
         /// <param name="counterParts">A list of selling orders (in case that order is a buying order) or vice versa</param>
         /// <param name="stockPrice">price that is used for the deal</param>
-        /// <returns>A tuple consisting of the updated order, a list of matching (and used) counterpart orders and the respective transactions</returns>
-        public static Tuple<Order, IEnumerable<Order>, IEnumerable<Transaction>> MatchOrders(Order order, IList<Order> counterParts, double stockPrice)
+        /// <returns>A list of matching counterpart orders</returns>
+        /*
+        public static IEnumerable<Order> MatchOrders(Order order, double stockPrice)
         {
-            var transactions = new List<Transaction>();
-            var usedOrders = new List<Order>();
-            var sharesProcessedTotal = 0;
-            IList<Order> matches;
-            bool buyMode = order.Type == Order.OrderType.BUY;
-
-            if (buyMode)
-            {
-                matches = counterParts.Where(x => x.ShareName.Equals(order.ShareName) && x.Limit <= stockPrice && order.Limit >= stockPrice).ToList();
-            }
-            else
-            {
-                matches = counterParts.Where(x => x.ShareName.Equals(order.ShareName) && x.Limit >= stockPrice && order.Limit <= stockPrice).ToList();
-            }
-
+            //var transactions = new List<Transaction>();
+            //var usedOrders = new List<Order>();
+            //var sharesProcessedTotal = 0;
+            /*
             while (matches.Count > 0 && sharesProcessedTotal <= order.NoOfOpenShares)
             {
                 var match = matches.First();
 
                 var sharesProcessed = Math.Min(order.NoOfOpenShares, match.NoOfOpenShares);
+                
                 var totalCost = sharesProcessed * stockPrice;
                 transactions.Add(new Transaction()
                 {
@@ -290,15 +428,19 @@ namespace Broker
                     NoOfSharesSold = sharesProcessed,
                     PricePerShare = stockPrice
                 });
+                 
                 order.NoOfProcessedShares += sharesProcessed;
                 match.NoOfProcessedShares += sharesProcessed;
                 order.Status = (order.NoOfOpenShares == 0) ? Order.OrderStatus.DONE : Order.OrderStatus.PARTIAL;
                 match.Status = (match.NoOfOpenShares == 0) ? Order.OrderStatus.DONE : Order.OrderStatus.PARTIAL;
                 matches.Remove(match);
+                
                 usedOrders.Add(match);
                 sharesProcessedTotal += sharesProcessed;
             }
-            return new Tuple<Order, IEnumerable<Order>, IEnumerable<Transaction>>(order, usedOrders, transactions);
+        
+            return matches;
         }
+         */
     }
 }

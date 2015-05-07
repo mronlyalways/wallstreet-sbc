@@ -29,6 +29,10 @@ namespace SpaceServer
                 space.Add(stockInformation, "StockInformation");
                 stockInformation.AddNotificationForEntryAdd((s, k, r) => Console.WriteLine("New info for {0}: price per share {1:C}, at a volume of {2} shares.", k, r.Item2, r.Item1));
 
+                var stockInformationUpdates = new XcoQueue<string>();
+                space.Add(stockInformationUpdates, "StockInformationUpdates");
+                stockInformationUpdates.AddNotificationForEntryEnqueued((s,r) => Console.WriteLine("New update for share {0}", r));
+
                 var investorRegistrations = new XcoQueue<Registration>();
                 space.Add(investorRegistrations, "InvestorRegistrations");
                 investorRegistrations.AddNotificationForEntryEnqueued((s, r) => Console.WriteLine("New registration queued for Email address {0} and budget {1}.", r.Email, r.Budget));
@@ -41,13 +45,13 @@ namespace SpaceServer
                 space.Add(orders, "Orders");
                 orders.AddNotificationForEntryAdd((s, k, v) => Console.WriteLine("New {0} order for Investor {1}, intending to buy {2} shares from {3}.", v.Type, v.InvestorId, v.ShareName, v.TotalNoOfShares));
 
+                var orderUpdates = new XcoQueue<Order>();
+                space.Add(orderUpdates, "OrderQueue");
+                orderUpdates.AddNotificationForEntryEnqueued((s, v) => Console.WriteLine("Updated order of type {0} for Investor {1}, intending to buy {2} shares from {3}.", v.Type, v.InvestorId, v.ShareName, v.TotalNoOfShares));
+
                 var transactions = new XcoList<Transaction>();
                 space.Add(transactions, "Transactions");
                 transactions.AddNotificationForEntryAdd((s, t, i) => Console.WriteLine("New transaction between {1} and {2}, transfering {2} shares for {3} Euros per share.", t.SellerId, t.BuyerId, t.NoOfSharesSold, t.PricePerShare));
-
-                var orderCoordinator = new XcoDictionary<string, string>();
-                space.Add(orderCoordinator, "OrderCoordinator");
-                orderCoordinator.AddNotificationForEntryAdd((s, k, v) => Console.WriteLine("New order with ID {0} in coordination container.", v));
 
                 Console.WriteLine("Press enter to quit ...");
                 Console.ReadLine();
