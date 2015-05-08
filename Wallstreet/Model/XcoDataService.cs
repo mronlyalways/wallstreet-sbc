@@ -18,7 +18,7 @@ namespace Wallstreet.Model
         private XcoDictionary<string, Tuple<int, double>> stockInformation;
         private XcoQueue<Registration> investorDepotRegistrations;
         private XcoDictionary<string, InvestorDepot> investorDepots;
-        private XcoDictionary<string, Order> orders;
+        private XcoList<Order> orders;
         private XcoList<Transaction> transactions;
         private IList<Action<ShareInformation>> marketCallbacks;
         private IList<Action<Order>> orderAddedCallbacks;
@@ -37,7 +37,7 @@ namespace Wallstreet.Model
             investorDepotRegistrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", spaceServerUri);
             investorDepotRegistrations.AddNotificationForEntryEnqueued(OnRegistrationEntryAdded);
             investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServerUri);
-            orders = space.Get<XcoDictionary<string, Order>>("Orders", spaceServerUri);
+            orders = space.Get<XcoList<Order>>("Orders", spaceServerUri);
             orders.AddNotificationForEntryAdd(OnOrderEntryAdded);
             orders.AddNotificationForEntryRemove(OnOrderEntryRemoved);
             transactions = space.Get<XcoList<Transaction>>("Transactions", spaceServerUri);
@@ -64,9 +64,8 @@ namespace Wallstreet.Model
 
             using (XcoTransaction transaction = space.BeginTransaction())
             {
-                foreach (string key in orders.Keys)
-                {
-                    info.Add(orders[key]);
+                for(int i = 0; i < orders.Count; i++) {
+                    info.Add(orders[i]);
                 }
                 transaction.Commit();
             }
@@ -173,12 +172,12 @@ namespace Wallstreet.Model
             ExecuteOnGUIThread(marketCallbacks, new ShareInformation() { FirmName = key, NoOfShares = info.Item1, PricePerShare = info.Item2 });
         }
 
-        private void OnOrderEntryAdded(XcoDictionary<string, Order> source, string key, Order order)
+        private void OnOrderEntryAdded(XcoList<Order> source, Order order, int key)
         {
             ExecuteOnGUIThread(orderAddedCallbacks, order);
         }
 
-        private void OnOrderEntryRemoved(XcoDictionary<string, Order> source, string key, Order order)
+        private void OnOrderEntryRemoved(XcoList<Order> source, Order order, int key)
         {
             ExecuteOnGUIThread(orderRemovedCallbacks, order);
         }

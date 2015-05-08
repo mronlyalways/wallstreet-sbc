@@ -20,7 +20,7 @@ namespace Investor.Model
         private XcoQueue<Registration> registrations;
         private XcoDictionary<string, InvestorDepot> investorDepots;
         private XcoDictionary<string, Tuple<int, double>> stockInformation;
-        private XcoDictionary<string, Order> orders;
+        private XcoList<Order> orders;
         private XcoQueue<Order> orderQueue;
         private IList<Action<ShareInformation>> marketCallbacks;
         private IList<Action<InvestorDepot>> investorDepotCallbacks;
@@ -44,7 +44,7 @@ namespace Investor.Model
             investorDepots.AddNotificationForEntryAdd(OnInvestorDepotAdded);
             stockInformation = space.Get<XcoDictionary<string, Tuple<int, double>>>("StockInformation", spaceServerUri);
             stockInformation.AddNotificationForEntryAdd(OnShareInformationAdded);
-            orders = space.Get<XcoDictionary<string, Order>>("Orders", spaceServerUri);
+            orders = space.Get<XcoList<Order>>("Orders", spaceServerUri);
             orders.AddNotificationForEntryAdd(OnNewOrderAdded);
             orderQueue = space.Get<XcoQueue<Order>>("OrderQueue", spaceServerUri);
             orderQueue.AddNotificationForEntryEnqueued(OnNewOrderAdded);
@@ -63,18 +63,7 @@ namespace Investor.Model
 
         public void CancelOrder(Order order)
         {
-            using (XcoTransaction tx = space.BeginTransaction())
-            {
-                try
-                {
-                    if (orders.ContainsKey(order.Id))
-                    {
-                        orders.Remove(order.Id);
-                    }
-                } catch (XcoException) {
-                    tx.Rollback();
-                }
-            }
+           //TODO
         }
 
         public InvestorDepot LoadInvestorInformation()
@@ -86,9 +75,10 @@ namespace Investor.Model
         {
             shareInformationCache = new List<ShareInformation>();
             orderCache = new List<Order>();
-            foreach (string key in orders.Keys)
+
+            for (int i = 0; i < orders.Count; i++)
             {
-                orderCache.Add(orders[key]);
+                orderCache.Add(orders[i]);
             }
             
             foreach (string key in stockInformation.Keys)
@@ -153,7 +143,7 @@ namespace Investor.Model
             ExecuteOnGUIThread(marketCallbacks, share);
         }
 
-        private void OnNewOrderAdded(XcoDictionary<string, Order> source, string key, Order order)
+        private void OnNewOrderAdded(XcoList<Order> source, Order order, int index)
         {
             orderCache = orderCache.Where(x => x.Id != order.Id).ToList();
             orderCache.Add(order);
