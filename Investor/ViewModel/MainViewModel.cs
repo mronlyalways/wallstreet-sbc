@@ -20,7 +20,8 @@ namespace Investor.ViewModel
             this.data = data;
             depot = data.LoadInvestorInformation();
             MarketInformation = new ObservableCollection<ShareInformation>(data.LoadMarketInformation());
-            OwnedShares = new ObservableCollection<ShareInformation>(depot.Shares.Select(x => new ShareInformation { FirmName = x.Key, NoOfShares = x.Value }));
+            OwnedShares = new ObservableCollection<OwningShareDTO>();
+            UpdateOwnedShares();
             PendingOrders = new ObservableCollection<Order>(data.LoadPendingOrders());
             data.AddNewInvestorInformationAvailableCallback(UpdateInvestorInformation);
             data.AddNewMarketInformationAvailableCallback(UpdateShareInformation);
@@ -35,7 +36,30 @@ namespace Investor.ViewModel
         {
             depot = d;
             RaisePropertyChanged(() => Budget);
-            OwnedShares = new ObservableCollection<ShareInformation>(d.Shares.Select(x => new ShareInformation { FirmName = x.Key, NoOfShares = x.Value }));
+            UpdateOwnedShares();
+        }
+
+        private void UpdateOwnedShares()
+        {
+            var collection = new ObservableCollection<OwningShareDTO>();
+
+            foreach (String shareName in depot.Shares.Keys)
+            {
+                 var infos = MarketInformation.Where(x => x.FirmName == shareName).ToList();
+                ShareInformation info = infos.First();
+                if (info != null) {
+                    OwningShareDTO s = new OwningShareDTO()
+                    {
+                        ShareName = shareName,
+                        Amount = depot.Shares[shareName],
+                        StockPrice = info.PricePerShare
+                    };
+                    collection.Add(s);
+                }
+            }
+
+            OwnedShares = collection;
+
         }
 
         private void UpdateShareInformation(ShareInformation info)
@@ -62,8 +86,8 @@ namespace Investor.ViewModel
             }
         }
 
-        private ObservableCollection<ShareInformation> ownedShares;
-        public ObservableCollection<ShareInformation> OwnedShares
+        private ObservableCollection<OwningShareDTO> ownedShares;
+        public ObservableCollection<OwningShareDTO> OwnedShares
         {
             get
             {
@@ -105,8 +129,8 @@ namespace Investor.ViewModel
             }
         }
 
-        private ShareInformation selectedSellingShare;
-        public ShareInformation SelectedSellingShare
+        private OwningShareDTO selectedSellingShare;
+        public OwningShareDTO SelectedSellingShare
         {
             get
             {
@@ -224,7 +248,7 @@ namespace Investor.ViewModel
         private void PlaceSellingOrder()
         {
             var id = Email + DateTime.Now.Ticks.ToString();
-            var order = new Order() { Id = id, InvestorId = Email, Type = Order.OrderType.SELL, ShareName = SelectedSellingShare.FirmName, Limit = LowerPriceLimit, TotalNoOfShares = NoOfSharesSelling, NoOfProcessedShares = 0 };
+            var order = new Order() { Id = id, InvestorId = Email, Type = Order.OrderType.SELL, ShareName = SelectedSellingShare.ShareName, Limit = LowerPriceLimit, TotalNoOfShares = NoOfSharesSelling, NoOfProcessedShares = 0 };
             data.PlaceOrder(order);
         }
 

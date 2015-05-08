@@ -47,7 +47,6 @@ namespace Investor.Model
             orders = space.Get<XcoList<Order>>("Orders", spaceServerUri);
             orders.AddNotificationForEntryAdd(OnNewOrderAdded);
             orderQueue = space.Get<XcoQueue<Order>>("OrderQueue", spaceServerUri);
-            orderQueue.AddNotificationForEntryEnqueued(OnNewOrderAdded);
         }
 
         public void Login(Registration r)
@@ -144,13 +143,6 @@ namespace Investor.Model
         }
 
         private void OnNewOrderAdded(XcoList<Order> source, Order order, int index)
-        {
-            orderCache = orderCache.Where(x => x.Id != order.Id).ToList();
-            orderCache.Add(order);
-            UpdateShareInformation(order);
-        }
-
-        private void OnNewOrderAdded(XcoQueue<Order> source, Order order)
         {
             orderCache = orderCache.Where(x => x.Id != order.Id).ToList();
             orderCache.Add(order);

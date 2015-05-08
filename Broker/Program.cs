@@ -37,6 +37,7 @@ namespace Broker
                 stockInformationUpdates = space.Get<XcoQueue<string>>("StockInformationUpdates", spaceServer);
 
                 orderQueue.AddNotificationForEntryEnqueued(OnOrderAddedToOrderQueue);
+                stockInformationUpdates.AddNotificationForEntryEnqueued(OnShareInformationAddedToQueue);
 
                 HandleRequests();
             }
@@ -104,6 +105,12 @@ namespace Broker
                     Console.WriteLine("Unable to reach server.\nPress enter to exit.");
                     Console.ReadLine();
                 }
+        }
+
+        private static void OnShareInformationAddedToQueue(XcoQueue<string> queue, string shareKey) {
+
+            //TODO Martin!!!
+
         }
 
         private static void OnOrderAddedToOrderQueue(XcoQueue<Order> queue, Order order)
@@ -275,11 +282,16 @@ namespace Broker
 
             if (investorDepots.ContainsKey(t.SellerId))
             {
-                investorDepots[t.SellerId].RemoveShares(t.ShareName, t.NoOfSharesSold);
+                var seller = investorDepots[t.SellerId];
+                seller.RemoveShares(t.ShareName, t.NoOfSharesSold);
+                seller.Budget += t.TotalCost;
+                investorDepots[t.SellerId] = seller;
             }
             else if (firmDepots.ContainsKey(t.SellerId))
             {
-                firmDepots[t.SellerId].OwnedShares -= t.NoOfSharesSold;
+                var seller = firmDepots[t.SellerId];
+                seller.OwnedShares -= t.NoOfSharesSold;
+                firmDepots[t.SellerId] = seller;
             }
 
             if (index >= 0)

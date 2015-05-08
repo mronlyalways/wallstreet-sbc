@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:m="clr-namespace:SharedFeatures.Model;assembly=SharedFeatures"
+        xmlns:im="clr-namespace:Investor.Model"
         Title="SBC Investor"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
     <Window.Resources>
@@ -22,13 +23,16 @@
                     <Label Content="{Binding PricePerShare}"/>
                 </StackPanel>
             </DataTemplate>
-            <DataTemplate x:Key="SellingShareInformationTemplate" DataType="{x:Type m:ShareInformation}">
+            <DataTemplate x:Key="SellingShareInformationTemplate" DataType="{x:Type im:OwningShareDTO}">
                 <StackPanel Orientation="Horizontal" Margin="5,10">
                     <Label Content="Share Name:"/>
-                    <Label Content="{Binding FirmName}"/>
-                    <Label Content="Share Volume:"/>
-                    <Label Content="{Binding NoOfShares}"/>
-                    <Label Content="Purchase Volume:"/>
+                    <Label Content="{Binding ShareName}"/>
+                    <Label Content="Amount:"/>
+                    <Label Content="{Binding Amount}"/>
+                    <Label Content="Price per share:"/>
+                    <Label Content="{Binding StockPrice}"/>
+                    <Label Content="Value:"/>
+                    <Label Content="{Binding Value}"/>
                 </StackPanel>
             </DataTemplate>
             <DataTemplate x:Key="OrderTemplate" DataType="{x:Type m:Order}">
