@@ -113,21 +113,29 @@ namespace Broker
 
         private static void OnOrderEntryAdded(XcoQueue<Order> source, Order order)
         {
+            Order o = null;
             using (XcoTransaction tx = space.BeginTransaction())
             {
                 try
                 {
-                    Order o = source.Dequeue(false);
-
-                    if (!o.Status.Equals(Order.OrderStatus.DONE))
-                    {
-                        ProcessOrder(ref o);
-                    }
+                    o = source.Dequeue(true);
+                                     
                 }
-                catch (XcoException)
+                catch (XcoException e)
                 {
+                    Console.WriteLine(e.Message);
                     tx.Rollback();
                 }
+            }
+
+            if (o != null && !o.Status.Equals(Order.OrderStatus.DONE))
+            {
+                Console.WriteLine("Process order:" + o.ToString() + " " + o.Status);
+                ProcessOrder(ref o);
+            }
+            else if (o != null && !orders.ContainsKey(o.Id))
+            {
+                orders.Add(o.Id, order);
             }
         }
 
@@ -139,7 +147,6 @@ namespace Broker
             {
                 try { 
                     key = source.Dequeue(false);
-                    Console.WriteLine("Process update for share: " + key);
                     tx.Commit();
                 } catch(XcoException) {
                     //Queue seems to be emtpy already
@@ -209,7 +216,6 @@ namespace Broker
                                 if ((order.Type.Equals(Order.OrderType.BUY) && order.Limit >= sharePrice && o.Type.Equals(Order.OrderType.SELL) && o.Limit <= sharePrice) ||
                                     (order.Type.Equals(Order.OrderType.SELL) && order.Limit <= sharePrice && o.Type.Equals(Order.OrderType.BUY) && o.Limit >= sharePrice))
                                 {
-                                    orders.Remove(o.Id);
                                     useMatch = o;
                                     break;
                                 }
@@ -283,8 +289,22 @@ namespace Broker
                                 }
                                 transactions.Add(t);
 
-                                orderQueue.Enqueue(order);
-                                orderQueue.Enqueue(useMatch);
+                                if (order.Status.Equals(Order.OrderStatus.DONE))
+                                {
+                                    orders.Add(order.Id, order);
+                                } else 
+                                {
+                                    orderQueue.Enqueue(order);
+                                }
+
+                                if (useMatch.Status.Equals(Order.OrderStatus.DONE))
+                                {
+                                    orders.Add(order.Id, order);
+                                }
+                                else
+                                {
+                                    orderQueue.Enqueue(useMatch);
+                                }
                             }
                             else
                             {
@@ -330,60 +350,7 @@ namespace Broker
                     tx.Rollback();
                     orderQueue.Enqueue(order);
                 }
-
             }
-
-            /*
-            var newOrder = result.Item1;
-            var matches = result.Item2;
-            var newTransactions = result.Item3;
-            pendingOrders.Add(newOrder);
-            if (matches.Count() > 0)
-            {
-                if (IsAffordableForBuyer(newTransactions))
-                {
-                    var oldMatches = pendingOrders.Where(x => matches.Select(y => y.Id).Contains(x.Id));
-                    pendingOrders = pendingOrders.Except(oldMatches).Union(matches).ToList();
-
-                    using (XcoTransaction transaction = space.BeginTransaction())
-                    {
-                        orders[newOrder.Id] = newOrder;
-                        foreach (Order m in matches)
-                        {
-                            orders[m.Id] = m;
-                        }
-                        foreach (Transaction t in newTransactions)
-                        {
-                            var buyer = investorDepots[t.BuyerId];
-                            buyer.Budget -= (t.TotalCost + t.Provision);
-                            buyer.AddShares(t.ShareName, t.NoOfSharesSold);
-                            investorDepots[t.BuyerId] = buyer;
-
-                            InvestorDepot seller;
-                            if (investorDepots.TryGetValue(t.SellerId, out seller)) // if yes, then investor, else firm
-                            {
-                                seller.Budget += (t.TotalCost);
-                                seller.RemoveShares(t.ShareName, t.NoOfSharesSold);
-                                investorDepots[t.SellerId] = seller;
-                            }
-                            else
-                            {
-                                var firm = firmDepots[t.ShareName];
-                                firm.OwnedShares -= t.NoOfSharesSold;
-                                firmDepots[t.ShareName] = firm;
-                            }
-                            transactions.Add(t);
-                        }
-                        transaction.Commit();
-                    }
-                }
-                else
-                {
-                    pendingOrders.Remove(newOrder);
-                    orders.Remove(order.ShareName);
-                }
-            }
-             */
         }
 
         private static bool IsAffordableForBuyer(IEnumerable<Transaction> transactions)

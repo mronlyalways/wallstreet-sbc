@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using XcoSpaces;
 using XcoSpaces.Collections;
+using XcoSpaces.Exceptions;
 using SharedFeatures.Model;
 
 namespace Wallstreet.Model
@@ -128,10 +129,18 @@ namespace Wallstreet.Model
         {
             using(XcoTransaction tx = space.BeginTransaction())
             {
-                Registration reg = source.Dequeue();
+                try
+                {
+                    Registration reg = source.Dequeue();
 
-                HandleRegistration(reg);
-                tx.Commit();
+                    HandleRegistration(reg);
+                    tx.Commit();
+                }
+                catch (XcoException e)
+                {
+                    Console.WriteLine(e.Message);
+                    tx.Rollback();
+                }
             }
         }
 
