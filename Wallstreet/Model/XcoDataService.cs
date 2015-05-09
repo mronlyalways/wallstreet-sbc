@@ -15,7 +15,7 @@ namespace Wallstreet.Model
     {
         private readonly Uri spaceServerUri = new Uri("xco://" + Environment.MachineName + ":" + 9000);
         private XcoSpace space;
-        private XcoDictionary<string, Tuple<int, double>> stockInformation;
+        private XcoList<ShareInformation> stockInformation;
         private XcoQueue<Registration> investorDepotRegistrations;
         private XcoDictionary<string, InvestorDepot> investorDepots;
         private XcoList<Order> orders;
@@ -32,7 +32,7 @@ namespace Wallstreet.Model
             orderRemovedCallbacks = new List<Action<Order>>();
             transactionAddedCallbacks = new List<Action<Transaction>>();
             space = new XcoSpace(0);
-            stockInformation = space.Get<XcoDictionary<string, Tuple<int, double>>>("StockInformation", spaceServerUri);
+            stockInformation = space.Get<XcoList<ShareInformation>>("StockInformation", spaceServerUri);
             stockInformation.AddNotificationForEntryAdd(OnShareInformationEntryAdded);
             investorDepotRegistrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", spaceServerUri);
             investorDepotRegistrations.AddNotificationForEntryEnqueued(OnRegistrationEntryAdded);
@@ -49,10 +49,24 @@ namespace Wallstreet.Model
         public IEnumerable<ShareInformation> LoadMarketInformation()
         {
             IList<ShareInformation> info = new List<ShareInformation>();
-            foreach (string key in stockInformation.Keys)
+
+            using (XcoTransaction tx = space.BeginTransaction())
             {
-                var tuple = stockInformation[key];
-                info.Add(new ShareInformation() { FirmName = key, NoOfShares = tuple.Item1, PricePerShare = tuple.Item2 });
+                try
+                {
+
+                    for (int i = 0; i < stockInformation.Count; i++)
+                    {
+                        info.Add(stockInformation[i]);
+                    }
+
+                        tx.Commit();
+                }
+                catch (XcoException e)
+                {
+                    Console.WriteLine("Wallstreet: " + e.Message);
+                    tx.Rollback();
+                }
             }
 
             return info;
@@ -167,9 +181,9 @@ namespace Wallstreet.Model
             }
         }
 
-        private void OnShareInformationEntryAdded(XcoDictionary<string, Tuple<int, double>> source, string key, Tuple<int, double> info)
+        private void OnShareInformationEntryAdded(XcoList<ShareInformation> source, ShareInformation share, int index)
         {
-            ExecuteOnGUIThread(marketCallbacks, new ShareInformation() { FirmName = key, NoOfShares = info.Item1, PricePerShare = info.Item2 });
+            ExecuteOnGUIThread(marketCallbacks, share);
         }
 
         private void OnOrderEntryAdded(XcoList<Order> source, Order order, int key)

@@ -50,6 +50,7 @@
     <Compile Include="Model\InvestorDepot.cs" />
     <Compile Include="Model\ShareInformation.cs" />
     <Compile Include="Model\Transaction.cs" />
+    <Compile Include="Model\Utils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

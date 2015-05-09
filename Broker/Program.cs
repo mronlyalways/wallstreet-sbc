@@ -20,7 +20,7 @@ namespace Broker
         private static XcoDictionary<string, InvestorDepot> investorDepots;
         private static XcoDictionary<string, FirmDepot> firmDepots;
         private static XcoList<Transaction> transactions;
-        private static XcoDictionary<string, Tuple<int, double>> stockInformation;
+        private static XcoList<ShareInformation> stockInformation;
         private static XcoQueue<string> stockInformationUpdates;
 
         static void Main(string[] args)
@@ -33,7 +33,7 @@ namespace Broker
                 orderQueue = space.Get<XcoQueue<Order>>("OrderQueue", spaceServer);
                 investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServer);
                 firmDepots = space.Get<XcoDictionary<string, FirmDepot>>("FirmDepots", spaceServer);
-                stockInformation = space.Get<XcoDictionary<string, Tuple<int, double>>>("StockInformation", spaceServer);
+                stockInformation = space.Get<XcoList<ShareInformation>>("StockInformation", spaceServer);
                 stockInformationUpdates = space.Get<XcoQueue<string>>("StockInformationUpdates", spaceServer);
 
                 orderQueue.AddNotificationForEntryEnqueued(OnOrderAddedToOrderQueue);
@@ -67,14 +67,26 @@ namespace Broker
                                 {
                                     depot.OwnedShares += request.Shares;
                                     firmDepots[request.FirmName] = depot;
-                                    var info = stockInformation[request.FirmName];
-                                    stockInformation[request.FirmName] = new Tuple<int, double>(info.Item1 + request.Shares, info.Item2);
+                                    var info = Utils.FindShare(stockInformation, request.FirmName);
+                                    ShareInformation update = new ShareInformation()
+                                    {
+                                        FirmName = request.FirmName,
+                                        NoOfShares = info.NoOfShares,
+                                        PricePerShare = info.PricePerShare
+                                    };
+                                    Utils.ReplaceShare(stockInformation, update);
                                     Console.WriteLine("Add {0} shares to existing account \"{1}\"", request.Shares, request.FirmName);
                                 }
                                 else
                                 {
                                     firmDepots.Add(request.FirmName, new FirmDepot() { FirmName = request.FirmName, OwnedShares = request.Shares });
-                                    stockInformation.Add(request.FirmName, new Tuple<int, double>(request.Shares, request.PricePerShare));
+                                    ShareInformation s = new ShareInformation()
+                                    {
+                                        FirmName = request.FirmName,
+                                        NoOfShares = request.Shares,
+                                        PricePerShare = request.PricePerShare
+                                    };
+                                    stockInformation.Add(s);
                                     Console.WriteLine("Create new firm depot for \"{0}\" with {1} shares, selling for {2}", request.FirmName, request.Shares, request.PricePerShare);
                                 }
                                 var orderId = request.FirmName + DateTime.Now.Ticks.ToString();
@@ -126,7 +138,24 @@ namespace Broker
                 {
                     try
                     {
-                       
+                        Double stockPrice = Utils.FindPricePerShare(stockInformation, s);
+                        for (int i = 0; i < orders.Count; i++)
+                        {
+                            Order candidate = orders[i];
+                            if (candidate.ShareName == s && !candidate.Status.Equals(Order.OrderStatus.DONE) && !candidate.Status.Equals(Order.OrderStatus.DELETED))
+                            {
+                                if ((candidate.Type.Equals(Order.OrderType.BUY) && candidate.Limit >= stockPrice) ||
+                                    (candidate.Type.Equals(Order.OrderType.SELL) && candidate.Limit <= stockPrice))
+                                {
+                                    if (CanProcessOrder(candidate))
+                                    {
+                                        ProcessOrder(candidate, i);
+                                    }
+                                }
+                            }
+                        }
+
+                        tx.Commit();
                     }
                     catch (XcoException e)
                     {
@@ -197,8 +226,8 @@ namespace Broker
                 Order candidate = orders[i];
 
                 if (o.ShareName == candidate.ShareName && (candidate.Status != Order.OrderStatus.DONE && candidate.Status != Order.OrderStatus.DELETED)) {
-                    if ((o.Type.Equals(Order.OrderType.BUY) && candidate.Type.Equals(Order.OrderType.SELL) && o.Limit >= stockInformation[o.ShareName].Item2 && candidate.Limit <= stockInformation[o.ShareName].Item2) ||
-                    (o.Type.Equals(Order.OrderType.SELL) && candidate.Type.Equals(Order.OrderType.BUY) && o.Limit <= stockInformation[o.ShareName].Item2 && candidate.Limit >= stockInformation[o.ShareName].Item2))
+                    if ((o.Type.Equals(Order.OrderType.BUY) && candidate.Type.Equals(Order.OrderType.SELL) && o.Limit >= Utils.FindPricePerShare(stockInformation, o.ShareName) && candidate.Limit <= Utils.FindPricePerShare(stockInformation, o.ShareName)) ||
+                    (o.Type.Equals(Order.OrderType.SELL) && candidate.Type.Equals(Order.OrderType.BUY) && o.Limit <= Utils.FindPricePerShare(stockInformation, o.ShareName) && candidate.Limit >= Utils.FindPricePerShare(stockInformation, o.ShareName)))
                     {
                         match = candidate;
                         index = i;
@@ -223,6 +252,8 @@ namespace Broker
 
             var noOfSharesSold = Math.Min(o1.NoOfOpenShares, o2.NoOfOpenShares);
 
+
+
             Transaction t = new Transaction()
             {
                 TransactionId = o1.Id + o2.Id,
@@ -233,7 +264,7 @@ namespace Broker
                 BuyingOrderId = purchase.Id,
                 SellingOrderId = sell.Id,
                 NoOfSharesSold = noOfSharesSold,
-                PricePerShare = stockInformation[o1.ShareName].Item2
+                PricePerShare = Utils.FindPricePerShare(stockInformation, o1.ShareName)
             };
 
             return t;
@@ -284,7 +315,25 @@ namespace Broker
                 if (HasEnoughShares(t) && IsAffordable(t))
                 {
                     PerformTransaction(o, index, matchIndex, match, t);
-                    
+
+
+                    XcoTransaction tx = space.CurrentTransaction;
+
+                    if (index >= 0)
+                    {
+                        transactions.Add(t);
+                        orders.Insert(index,o);
+                        orders.Insert(matchIndex, match);
+                    }
+                    else if (tx != null) 
+                    { 
+                        tx.Commit();
+
+                        transactions.Add(t);
+                        orders.Insert(matchIndex, match);
+                        orderQueue.Enqueue(o);
+                    }
+                                       
                 }
                 else
                 {
@@ -327,15 +376,6 @@ namespace Broker
             if (matchIndex >= 0)
             {
                 orders.RemoveAt(matchIndex);
-            }
-
-            XcoTransaction tx = space.CurrentTransaction;
-
-            if (tx != null)
-            {
-                tx.Commit();
-                orderQueue.Enqueue(match);
-                orderQueue.Enqueue(o);
             }
         }
     }

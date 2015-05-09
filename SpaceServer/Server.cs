@@ -25,9 +25,9 @@ namespace SpaceServer
                 space.Add(firmDepots, "FirmDepots");
                 firmDepots.AddNotificationForEntryAdd((s, k, r) => Console.WriteLine("Depot entry created/overwritten for {0}, publishing/adding {1} shares.", k, r.OwnedShares));
 
-                var stockInformation = new XcoDictionary<string, Tuple<int, double>>();
+                var stockInformation = new XcoList<ShareInformation>();
                 space.Add(stockInformation, "StockInformation");
-                stockInformation.AddNotificationForEntryAdd((s, k, r) => Console.WriteLine("New info for {0}: price per share {1:C}, at a volume of {2} shares.", k, r.Item2, r.Item1));
+                stockInformation.AddNotificationForEntryAdd((s, k, r) => Console.WriteLine("New info for {0}: price per share {1:C}, at a volume of {2} shares.", k.FirmName, k.PricePerShare, k.NoOfShares));
 
                 var stockInformationUpdates = new XcoQueue<string>();
                 space.Add(stockInformationUpdates, "StockInformationUpdates");

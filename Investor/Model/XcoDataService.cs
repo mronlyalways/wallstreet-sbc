@@ -19,7 +19,7 @@ namespace Investor.Model
         private XcoSpace space;
         private XcoQueue<Registration> registrations;
         private XcoDictionary<string, InvestorDepot> investorDepots;
-        private XcoDictionary<string, Tuple<int, double>> stockInformation;
+        private XcoList<ShareInformation> stockInformation;
         private XcoList<Order> orders;
         private XcoQueue<Order> orderQueue;
         private IList<Action<ShareInformation>> marketCallbacks;
@@ -42,7 +42,7 @@ namespace Investor.Model
             registrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", spaceServerUri);
             investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServerUri);
             investorDepots.AddNotificationForEntryAdd(OnInvestorDepotAdded);
-            stockInformation = space.Get<XcoDictionary<string, Tuple<int, double>>>("StockInformation", spaceServerUri);
+            stockInformation = space.Get<XcoList<ShareInformation>>("StockInformation", spaceServerUri);
             stockInformation.AddNotificationForEntryAdd(OnShareInformationAdded);
             orders = space.Get<XcoList<Order>>("Orders", spaceServerUri);
             orders.AddNotificationForEntryAdd(OnNewOrderAdded);
@@ -52,7 +52,19 @@ namespace Investor.Model
         public void Login(Registration r)
         {
             registration = r;
-            this.registrations.Enqueue(r);
+            using (XcoTransaction tx = space.BeginTransaction())
+            {
+                try
+                {
+                    this.registrations.Enqueue(r);
+                    tx.Commit();
+                }
+                catch (XcoException e)
+                {
+                    Console.WriteLine("Investor: " + e.Message);
+                    tx.Rollback();
+                }
+            }
         }
 
         public void PlaceOrder(Order order)
@@ -111,19 +123,31 @@ namespace Investor.Model
             {
                 orderCache.Add(orders[i]);
             }
-            
-            foreach (string key in stockInformation.Keys)
+            using (XcoTransaction tx = space.BeginTransaction())
             {
-                var tuple = stockInformation[key];
-                
-                shareInformationCache.Add(new ShareInformation()
+                try
                 {
-                    FirmName = key,
-                    NoOfShares = tuple.Item1,
-                    PurchasingVolume = GetPurchasingVolume(orderCache, key),
-                    SalesVolume = GetSalesVolume(orderCache, key),
-                    PricePerShare = tuple.Item2
-                });
+
+                        for (int i = 0; i < stockInformation.Count; i++) {
+                            ShareInformation s = stockInformation[i];
+
+                        shareInformationCache.Add(new ShareInformation()
+                        {
+                            FirmName = s.FirmName,
+                            NoOfShares = s.NoOfShares,
+                            PurchasingVolume = GetPurchasingVolume(orderCache, s.FirmName),
+                            SalesVolume = GetSalesVolume(orderCache, s.FirmName),
+                            PricePerShare = s.PricePerShare
+                        });
+                    }
+
+                    tx.Commit();
+                }
+                catch (XcoException e)
+                {
+                    Console.WriteLine("Investor: " + e.Message);
+                    tx.Rollback();
+                }
             }
 
             return shareInformationCache;
@@ -167,9 +191,8 @@ namespace Investor.Model
             }
         }
 
-        private void OnShareInformationAdded(XcoDictionary<string, Tuple<int, double>> source, string key, Tuple<int, double> info)
+        private void OnShareInformationAdded(XcoList<ShareInformation> source, ShareInformation share, int index)
         {
-            var share = new ShareInformation() { FirmName = key, NoOfShares = info.Item1, PurchasingVolume = 0, SalesVolume = 0, PricePerShare = info.Item2 };
             shareInformationCache.Add(share);
             ExecuteOnGUIThread(marketCallbacks, share);
         }
