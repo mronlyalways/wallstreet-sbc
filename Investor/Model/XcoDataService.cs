@@ -62,7 +62,39 @@ namespace Investor.Model
 
         public void CancelOrder(Order order)
         {
-           //TODO
+            using (XcoTransaction tx = space.BeginTransaction())
+            {
+
+                try
+                {
+                    int index = -1;
+                    for (int i = 0; i < orders.Count; i++)
+                    {
+                        
+                        if (orders[i].Id.Equals(order.Id))
+                        {
+
+                            Console.WriteLine(orders[i]);
+                            index = i;
+                            break;
+                        }
+                    }
+
+                    if (index >= 0)
+                    {
+                        orders.RemoveAt(index);
+                        order.Status = Order.OrderStatus.DELETED;
+                        orders.Add(order);
+                    }
+
+                    tx.Commit();
+                }
+                catch (XcoException e)
+                {
+                    tx.Rollback();
+                }
+
+            }
         }
 
         public InvestorDepot LoadInvestorInformation()

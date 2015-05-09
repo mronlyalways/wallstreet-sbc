@@ -23,6 +23,7 @@ namespace Wallstreet.ViewModel
 
             data.AddNewMarketInformationAvailableCallback(OnNewMarketInformationAvailable);
             data.AddNewOrderAddedCallback(OnNewOrderAdded);
+            data.AddOrderRemovedCallback(OnOrderRemoved);
             data.AddNewTransactionAddedCallback(Transactions.Add);
         }
 

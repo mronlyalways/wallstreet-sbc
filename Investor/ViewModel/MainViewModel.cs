@@ -60,6 +60,8 @@ namespace Investor.ViewModel
 
             OwnedShares = collection;
 
+            RaisePropertyChanged(() => DepotValue);
+
         }
 
         private void UpdateShareInformation(ShareInformation info)
@@ -71,6 +73,20 @@ namespace Investor.ViewModel
         public string Email { get { return depot.Email; } }
 
         public double Budget { get { return depot.Budget; } }
+
+        public double DepotValue
+        {
+            get
+            {
+                double value = 0;
+                foreach (OwningShareDTO s in OwnedShares)
+                {
+                    value += s.Value;
+                }
+
+                return value;
+            }
+        }
 
         private ObservableCollection<ShareInformation> marketInformation;
         public ObservableCollection<ShareInformation> MarketInformation
@@ -109,7 +125,7 @@ namespace Investor.ViewModel
             }
             set
             {
-                pendingOrders = value;
+                pendingOrders = new ObservableCollection<Order>(from i in value orderby i.Id select i);
                 RaisePropertyChanged(() => PendingOrders);
             }
         }

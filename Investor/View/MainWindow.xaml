@@ -65,6 +65,8 @@
             <Label Content="{Binding Email}" />
             <Label Margin="10,0,0,0" Content="Budget:" />
             <Label Content="{Binding Budget}" />
+            <Label Margin="10,0,0,0" Content="Depot value:" />
+            <Label Content="{Binding DepotValue}" />
             <Button HorizontalAlignment="Right" Content="Logout" Command="{Binding LogoutCommand}" />
         </Menu>
         <TabControl Grid.Row="1">
@@ -113,7 +115,6 @@
                     <Button Grid.Row="1" Content="Cancel Order" Command="{Binding CancelPendingOrderCommand}" />
                 </Grid>
             </TabItem>
-            <TabItem Header="Account"/>
         </TabControl>
     </Grid>
 </Window>

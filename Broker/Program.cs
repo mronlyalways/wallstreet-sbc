@@ -109,7 +109,32 @@ namespace Broker
 
         private static void OnShareInformationAddedToQueue(XcoQueue<string> queue, string shareKey) {
 
-            //TODO Martin!!!
+            string s = null;
+
+            try
+            {
+                s = queue.Dequeue(1000);
+            }
+            catch (XcoException e)
+            {
+                Console.WriteLine(e.Message);
+            }
+
+            if (s != null)
+            {
+                using (XcoTransaction tx = space.BeginTransaction())
+                {
+                    try
+                    {
+                       
+                    }
+                    catch (XcoException e)
+                    {
+                        Console.WriteLine(e.Message);
+                        tx.Rollback();
+                    }
+                }
+            }
 
         }
 

@@ -56,13 +56,12 @@
             </DataTemplate>
         </ResourceDictionary>
     </Window.Resources>
-    <Grid x:Name="LayoutRoot" VerticalAlignment="Top">
+    <Grid x:Name="LayoutRoot" VerticalAlignment="Stretch">
     	<Grid.RowDefinitions>
-    		<RowDefinition/>
-    		<RowDefinition/>
-    	</Grid.RowDefinitions>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
     	<Menu />
-    	<TabControl Grid.Row="1">
+    	<TabControl Grid.Row="0">
             <TabItem Header="Market">
                 <ListBox ItemTemplate="{StaticResource ShareInformationTemplate}" ItemsSource="{Binding MarketInformation}"/>
             </TabItem>
@@ -72,7 +71,7 @@
             <TabItem Header="Orders">
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
