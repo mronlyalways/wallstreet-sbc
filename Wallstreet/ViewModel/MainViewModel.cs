@@ -54,11 +54,15 @@ namespace Wallstreet.ViewModel
         {
             if (order.Type == Order.OrderType.BUY)
             {
+                BuyingOrders = new ObservableCollection<Order>(BuyingOrders.Where(x => x.Id != order.Id).ToList());
                 BuyingOrders.Add(order);
+                RaisePropertyChanged(() => BuyingOrders);
             }
             else
             {
+                SellingOrders = new ObservableCollection<Order>(SellingOrders.Where(x => x.Id != order.Id).ToList());
                 SellingOrders.Add(order);
+                RaisePropertyChanged(() => SellingOrders);
             }
         }
 
@@ -67,10 +71,12 @@ namespace Wallstreet.ViewModel
             if (order.Type == Order.OrderType.BUY)
             {
                 BuyingOrders.Remove(order);
+                RaisePropertyChanged(() => BuyingOrders);
             }
             else
             {
                 SellingOrders.Remove(order);
+                RaisePropertyChanged(() => SellingOrders);
             }
         }
     }

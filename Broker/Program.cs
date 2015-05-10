@@ -125,7 +125,7 @@ namespace Broker
 
             try
             {
-                s = queue.Dequeue(1000);
+                s = queue.Dequeue(true);
             }
             catch (XcoException e)
             {
@@ -139,14 +139,16 @@ namespace Broker
                     try
                     {
                         Double stockPrice = Utils.FindPricePerShare(stockInformation, s);
+                        Console.WriteLine("Received new stock price for {0}: {1:C}", s, stockPrice);
                         for (int i = 0; i < orders.Count; i++)
                         {
-                            Order candidate = orders[i];
+                            Order candidate = orders[i,true];
                             if (candidate.ShareName == s && !candidate.Status.Equals(Order.OrderStatus.DONE) && !candidate.Status.Equals(Order.OrderStatus.DELETED))
                             {
                                 if ((candidate.Type.Equals(Order.OrderType.BUY) && candidate.Limit >= stockPrice) ||
                                     (candidate.Type.Equals(Order.OrderType.SELL) && candidate.Limit <= stockPrice))
                                 {
+                                    Console.WriteLine("New stock price: Order is eligible for processing: {0}", candidate);
                                     if (CanProcessOrder(candidate))
                                     {
                                         ProcessOrder(candidate, i);
@@ -370,15 +372,15 @@ namespace Broker
                     if (index >= 0)
                     {
                         transactions.Add(t);
-                        orders.Insert(index,o);
-                        orders.Insert(matchIndex, match);
+                        orders[index] = o;
+                        orders[matchIndex] = match;
                     }
                     else if (tx != null) 
                     { 
                         tx.Commit();
 
                         transactions.Add(t);
-                        orders.Insert(matchIndex, match);
+                        orders[matchIndex] = match;
                         orderQueue.Enqueue(o);
                     }
                                        
@@ -416,16 +418,6 @@ namespace Broker
                 var seller = firmDepots[t.SellerId];
                 seller.OwnedShares -= t.NoOfSharesSold;
                 firmDepots[t.SellerId] = seller;
-            }
-
-            if (index >= 0)
-            {
-                orders.RemoveAt(index);
-            }
-
-            if (matchIndex >= 0)
-            {
-                orders.RemoveAt(matchIndex);
             }
         }
     }
