@@ -193,6 +193,8 @@ namespace Investor.Model
 
         private void OnShareInformationAdded(XcoList<ShareInformation> source, ShareInformation share, int index)
         {
+            share.PurchasingVolume = GetPurchasingVolume(orderCache, share.FirmName);
+            share.SalesVolume = GetSalesVolume(orderCache, share.FirmName);
             shareInformationCache.Add(share);
             ExecuteOnGUIThread(marketCallbacks, share);
         }
