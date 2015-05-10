@@ -15,7 +15,7 @@ namespace SharedFeatures.Model
             double result = 0;
             for (int i = 0; i < list.Count; i++)
             {
-                ShareInformation s = list[i];
+                ShareInformation s = list[i,true];
                 if (s.FirmName == firmName)
                 {
                     result = s.PricePerShare;
@@ -31,7 +31,7 @@ namespace SharedFeatures.Model
             ShareInformation result = null;
             for (int i = 0; i < list.Count; i++)
             {
-                ShareInformation s = list[i];
+                ShareInformation s = list[i,true];
                 if (s.FirmName == firmName)
                 {
                     result = s;
@@ -45,7 +45,7 @@ namespace SharedFeatures.Model
         {
             for (int i = 0; i < list.Count; i++)
             {
-                ShareInformation s = list[i];
+                ShareInformation s = list[i,true];
                 if (s.FirmName == share.FirmName)
                 {
                     list[i] = share;

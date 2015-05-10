@@ -214,7 +214,7 @@ namespace Investor.Model
                 share.SalesVolume = GetSalesVolume(orderCache, order.ShareName);
                 ExecuteOnGUIThread(marketCallbacks, share);
 
-                if (depot != null && order.InvestorId == depot.Email)
+                if (depot != null)
                 {
                     UpdatePendingOrders();
                 }
