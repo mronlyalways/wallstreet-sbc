@@ -223,18 +223,18 @@ namespace Investor.Model
 
         private void UpdatePendingOrders()
         {
-            var pendingOrders = orderCache.Where(x => x.InvestorId == depot.Email && x.NoOfOpenShares > 0);
+            var pendingOrders = orderCache.Where(x => x.InvestorId == depot.Email && x.NoOfOpenShares > 0 && x.Status != Order.OrderStatus.DONE && x.Status != Order.OrderStatus.DELETED);
             ExecuteOnGUIThread(pendingOrdersCallback, pendingOrders);
         }
 
         private int GetPurchasingVolume(IEnumerable<Order> orders, string key)
         {
-            return orders.Where(x => x.ShareName == key && x.Type == Order.OrderType.BUY).Sum(x => x.NoOfOpenShares);
+            return orders.Where(x => x.ShareName == key && x.Type == Order.OrderType.BUY && x.Status != Order.OrderStatus.DONE && x.Status != Order.OrderStatus.DELETED).Sum(x => x.NoOfOpenShares);
         }
 
         private int GetSalesVolume(IEnumerable<Order> orders, string key)
         {
-            return orders.Where(x => x.ShareName == key && x.Type == Order.OrderType.SELL).Sum(x => x.NoOfOpenShares);
+            return orders.Where(x => x.ShareName == key && x.Type == Order.OrderType.SELL && x.Status != Order.OrderStatus.DONE && x.Status != Order.OrderStatus.DELETED).Sum(x => x.NoOfOpenShares);
         }
 
         private void ExecuteOnGUIThread<T>(IEnumerable<Action<T>> callbacks, T arg)

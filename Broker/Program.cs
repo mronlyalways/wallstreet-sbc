@@ -299,7 +299,57 @@ namespace Broker
 
         private static void Punish(Order o1, int index1, Order o2, int index2, Transaction t)
         {
+            Order purchase = null;
+            Order sell = null;
+            int purchaseIndex = -1;
+            int sellIndex = -1;
 
+            if (o1.Type.Equals(Order.OrderType.BUY))
+            {
+                purchase = o1;
+                sell = o2;
+                purchaseIndex = index1;
+                sellIndex = index2;
+            }
+            else
+            {
+                purchase = o2;
+                sell = o1;
+                purchaseIndex = index2;
+                sellIndex = index1;
+            }
+
+            if (!IsAffordable(t))
+            {
+                
+                purchase.Status = Order.OrderStatus.DELETED;
+                
+            }
+            
+            if (!HasEnoughShares(t))
+            {
+                sell.Status = Order.OrderStatus.DELETED;
+            }
+
+            if (purchaseIndex >= 0)
+            {
+                orders.RemoveAt(purchaseIndex);
+                orders.Insert(purchaseIndex, purchase);
+            }
+            else
+            {
+                orders.Add(purchase);
+            }
+
+            if (sellIndex >= 0)
+            {
+                orders.RemoveAt(sellIndex);
+                orders.Insert(sellIndex, sell);
+            }
+            else
+            {
+                orders.Add(sell);
+            }
         }
 
         private static void ProcessOrder(Order o, int index)
@@ -311,13 +361,11 @@ namespace Broker
             {
 
                 Transaction t = calculateTransaction(o, match);
+                XcoTransaction tx = space.CurrentTransaction;
 
                 if (HasEnoughShares(t) && IsAffordable(t))
                 {
                     PerformTransaction(o, index, matchIndex, match, t);
-
-
-                    XcoTransaction tx = space.CurrentTransaction;
 
                     if (index >= 0)
                     {
@@ -338,6 +386,8 @@ namespace Broker
                 else
                 {
                     Punish(o, index, match, matchIndex, t);
+
+                    tx.Commit();
                 }
             }
         }
