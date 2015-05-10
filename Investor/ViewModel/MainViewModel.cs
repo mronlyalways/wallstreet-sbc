@@ -28,7 +28,7 @@ namespace Investor.ViewModel
             data.AddNewPendingOrdersCallback(o => PendingOrders = new ObservableCollection<Order>(o));
             PlaceBuyingOrderCommand = new RelayCommand(PlaceBuyingOrder, () => SelectedBuyingShare != null);
             PlaceSellingOrderCommand = new RelayCommand(PlaceSellingOrder, () => SelectedSellingShare != null);
-            CancelPendingOrderCommand = new RelayCommand(CancelPendingOrder, () => SelectedPendingOrder != null);
+            CancelPendingOrderCommand = new RelayCommand(CancelPendingOrder, () => SelectedPendingOrder != null && SelectedPendingOrder.Status == Order.OrderStatus.OPEN);
             LogoutCommand = new RelayCommand(Logout, () => true);
         }
 
@@ -68,6 +68,8 @@ namespace Investor.ViewModel
         {
             MarketInformation = new ObservableCollection<ShareInformation>(MarketInformation.Where(x => x.FirmName != info.FirmName));
             MarketInformation.Add(info);
+            MarketInformation = new ObservableCollection<ShareInformation>(from i in MarketInformation orderby i.FirmName select i);
+            UpdateOwnedShares();
         }
 
         public string Email { get { return depot.Email; } }
@@ -97,7 +99,7 @@ namespace Investor.ViewModel
             }
             set
             {
-                marketInformation = value;
+                marketInformation = new ObservableCollection<ShareInformation>(from i in value orderby i.FirmName select i);
                 RaisePropertyChanged(() => MarketInformation);
             }
         }
@@ -111,7 +113,7 @@ namespace Investor.ViewModel
             }
             set
             {
-                ownedShares = value;
+                ownedShares = new ObservableCollection<OwningShareDTO>(from i in value orderby i.ShareName select i); ;
                 RaisePropertyChanged(() => OwnedShares);
             }
         }
