@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using XcoSpaces;
 using XcoSpaces.Collections;
 using XcoSpaces.Exceptions;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Broker
 {
@@ -23,8 +26,57 @@ namespace Broker
         private static XcoList<ShareInformation> stockInformation;
         private static XcoQueue<string> stockInformationUpdates;
 
+        static bool exitSystem = false;
+
+        #region Trap application termination
+        [DllImport("Kernel32")]
+        private static extern bool SetConsoleCtrlHandler(EventHandler handler, bool add);
+
+        private delegate bool EventHandler(CtrlType sig);
+        static EventHandler _handler;
+
+        enum CtrlType
+        {
+            CTRL_C_EVENT = 0,
+            CTRL_BREAK_EVENT = 1,
+            CTRL_CLOSE_EVENT = 2,
+            CTRL_LOGOFF_EVENT = 5,
+            CTRL_SHUTDOWN_EVENT = 6
+        }
+
+        private static bool Handler(CtrlType sig)
+        {
+            Console.WriteLine("Exiting system due to external CTRL-C, or process kill, or shutdown");
+
+            stockInformationUpdates.Dispose();
+            stockInformation.Dispose();
+            transactions.Dispose();
+            firmDepots.Dispose();
+            investorDepots.Dispose();
+            orderQueue.Dispose();
+            orders.Dispose();
+            requestsQ.Dispose();
+            space.Dispose();
+
+            Console.WriteLine("Cleanup complete");
+
+            //allow main to run off
+            exitSystem = true;
+
+            //shutdown right away so there are no lingering threads
+            Environment.Exit(-1);
+
+            return true;
+        }
+        #endregion
+
+
         static void Main(string[] args)
         {
+
+            _handler += new EventHandler(Handler);
+            SetConsoleCtrlHandler(_handler, true);
+
             try
             {
                 space = new XcoSpace(0);
