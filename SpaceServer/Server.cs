@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using XcoSpaces;
 using XcoSpaces.Collections;
 using XcoSpaces.Exceptions;
+using XcoSpaces.Kernel;
+using XcoSpaces.Kernel.Selectors;
 
 namespace SpaceServer
 {
@@ -15,8 +17,14 @@ namespace SpaceServer
     {
         static void Main(string[] args)
         {
+            using (XcoKernel kernel = new XcoKernel())
             using (XcoSpace space = new XcoSpace(9000))
             {
+
+                kernel.Start(9001);
+                ContainerReference cref = kernel.CreateNamedContainer(null, "BrokerIdContainer", 1, new LindaSelector());
+                kernel.Write(cref, null, 0, new Entry(new XcoSpaces.Kernel.Selectors.Tuple(new TupleValue<int>(0))));
+                
                 var qRequests = new XcoQueue<Request>();
                 space.Add(qRequests, "RequestQ");
                 qRequests.AddNotificationForEntryEnqueued((s, r) => Console.WriteLine("New request queued for {0}, publishing {1} shares for {2} Euros.", r.FirmName, r.Shares, r.PricePerShare));

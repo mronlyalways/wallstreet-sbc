@@ -18,6 +18,8 @@
                     <Label Content="{Binding BuyerId}"/>
                     <Label Content="Seller:"/>
                     <Label Content="{Binding SellerId}"/>
+                    <Label Content="Broker:"/>
+                    <Label Content="{Binding BrokerId}"/>
                     <Label Content="Shares Sold:"/>
                     <Label Content="{Binding NoOfSharesSold}"/>
                     <Label Content="Price per share:"/>

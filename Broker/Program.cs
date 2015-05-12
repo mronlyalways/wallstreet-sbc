@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using XcoSpaces;
 using XcoSpaces.Collections;
 using XcoSpaces.Exceptions;
+using XcoSpaces.Kernel;
+using XcoSpaces.Kernel.Selectors;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +17,9 @@ namespace Broker
 {
     public class Program
     {
+        private static int brokerId;
         private static readonly Uri spaceServer = new Uri("xco://" + Environment.MachineName + ":" + 9000);
+        private static readonly string kernelServer = Environment.MachineName + ":" + 9001;
         private static XcoSpace space;
         private static XcoQueue<Request> requestsQ;
         private static XcoList<Order> orders;
@@ -79,6 +83,7 @@ namespace Broker
 
             try
             {
+                QueryBrokerId();
                 space = new XcoSpace(0);
                 transactions = space.Get<XcoList<Transaction>>("Transactions", spaceServer);
                 orders = space.Get<XcoList<Order>>("Orders", spaceServer);
@@ -98,6 +103,36 @@ namespace Broker
                 Console.WriteLine("Error: Unable to reach server.\nPress enter to exit ...");
                 Console.ReadLine();
                 if (space != null && space.IsOpen) { space.Close(); }
+            }
+        }
+
+        private static void QueryBrokerId()
+        {
+            Console.WriteLine("Querying unique broker identification number (this may take a very long time)");
+            using(XcoKernel kernel = new XcoKernel()) {
+                kernel.Start(0);
+
+                ContainerReference cref = kernel.GetNamedContainer(kernelServer, "BrokerIdContainer");
+
+                List<IEntry> entries = kernel.Take(cref, null, System.Threading.Timeout.Infinite, new LindaSelector(1, null));
+
+                if (entries.Count > 0)
+                {
+                    XcoSpaces.Kernel.Selectors.Tuple t = (XcoSpaces.Kernel.Selectors.Tuple) entries[0].Value;
+                    TupleValue v = (TupleValue) t.Values[0];
+                    brokerId = (int) v.Value;
+
+                    kernel.Write(cref, null, System.Threading.Timeout.Infinite, new Entry(new XcoSpaces.Kernel.Selectors.Tuple(new TupleValue<int>(brokerId + 1))));
+
+                    Console.WriteLine("Broker has id: " + brokerId);
+                }
+                else
+                {
+                    Environment.Exit(-1);
+                }
+
+                kernel.Stop();
+                kernel.Dispose();
             }
         }
 
@@ -311,7 +346,7 @@ namespace Broker
             Transaction t = new Transaction()
             {
                 TransactionId = o1.Id + o2.Id,
-                BrokerId = 1L,
+                BrokerId = brokerId,
                 ShareName = o1.ShareName,
                 BuyerId = purchase.InvestorId,
                 SellerId = sell.InvestorId,
