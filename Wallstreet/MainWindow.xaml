@@ -12,6 +12,8 @@
         <ResourceDictionary>
             <DataTemplate x:Key="TransactionTemplate" DataType="{x:Type m:Transaction}">
                 <StackPanel Orientation="Horizontal" Margin="5,10">
+                    <Label Content="Transaction ID:"/>
+                    <Label Content="{Binding TransactionId}"/>
                     <Label Content="Share Name:"/>
                     <Label Content="{Binding ShareName}"/>
                     <Label Content="Buyer:"/>
@@ -26,6 +28,12 @@
                     <Label Content="{Binding PricePerShare}"/>
                     <Label Content="Total Cost:"/>
                     <Label Content="{Binding TotalCost}"/>
+                    <Label Content="Provision:"/>
+                    <Label Content="{Binding Provision}"/>
+                    <Label Content="Buying Order Id:"/>
+                    <Label Content="{Binding BuyingOrderId}"/>
+                    <Label Content="Selling Order id:"/>
+                    <Label Content="{Binding SellingOrderId}"/>
                 </StackPanel>
             </DataTemplate>
             <DataTemplate x:Key="ShareInformationTemplate" DataType="{x:Type m:ShareInformation}">
