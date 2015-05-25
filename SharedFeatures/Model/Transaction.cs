@@ -27,6 +27,10 @@ namespace SharedFeatures.Model
 
         public int NoOfSharesSold { get; set; }
 
+        public bool PrioritizedSellingOrder { get; set; }
+
+        public bool PrioritizedBuyingOrder { get; set; }
+
         public double TotalCost
         {
             get
@@ -35,11 +39,29 @@ namespace SharedFeatures.Model
             }
         }
 
-        public double Provision
+        public double SellerProvision
         {
             get
             {
-                return TotalCost * 0.03;
+                int prioritizationMultiplier = 1;
+                if (PrioritizedSellingOrder)
+                {
+                    prioritizationMultiplier = 2;
+                }
+                return TotalCost * 0.03 * prioritizationMultiplier;
+            }
+        }
+
+        public double BuyerProvision
+        {
+            get
+            {
+                int prioritizationMultiplier = 1;
+                if (PrioritizedBuyingOrder)
+                {
+                    prioritizationMultiplier = 2;
+                }
+                return TotalCost * 0.03 * prioritizationMultiplier;
             }
         }
     }

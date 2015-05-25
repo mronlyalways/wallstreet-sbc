@@ -310,16 +310,38 @@ namespace Broker
         private static Order FindMatchingOrderFor(Order o, ref int index)
         {
             Order match = null;
+
             for (int i = 0; i < orders.Count; i++)
             {
                 Order candidate = orders[i];
 
-                if (o.ShareName == candidate.ShareName && (candidate.Status != Order.OrderStatus.DONE && candidate.Status != Order.OrderStatus.DELETED)) {
+                if (o.ShareName == candidate.ShareName && candidate.Prioritize && (candidate.Status != Order.OrderStatus.DONE && candidate.Status != Order.OrderStatus.DELETED))
+                {
                     if ((o.Type.Equals(Order.OrderType.BUY) && candidate.Type.Equals(Order.OrderType.SELL) && o.Limit >= Utils.FindPricePerShare(stockInformation, o.ShareName) && candidate.Limit <= Utils.FindPricePerShare(stockInformation, o.ShareName)) ||
                     (o.Type.Equals(Order.OrderType.SELL) && candidate.Type.Equals(Order.OrderType.BUY) && o.Limit <= Utils.FindPricePerShare(stockInformation, o.ShareName) && candidate.Limit >= Utils.FindPricePerShare(stockInformation, o.ShareName)))
                     {
                         match = candidate;
                         index = i;
+                        break;
+                    }
+                }
+            }
+
+            if (match == null)
+            {
+                for (int i = 0; i < orders.Count; i++)
+                {
+                    Order candidate = orders[i];
+
+                    if (o.ShareName == candidate.ShareName && (candidate.Status != Order.OrderStatus.DONE && candidate.Status != Order.OrderStatus.DELETED))
+                    {
+                        if ((o.Type.Equals(Order.OrderType.BUY) && candidate.Type.Equals(Order.OrderType.SELL) && o.Limit >= Utils.FindPricePerShare(stockInformation, o.ShareName) && candidate.Limit <= Utils.FindPricePerShare(stockInformation, o.ShareName)) ||
+                        (o.Type.Equals(Order.OrderType.SELL) && candidate.Type.Equals(Order.OrderType.BUY) && o.Limit <= Utils.FindPricePerShare(stockInformation, o.ShareName) && candidate.Limit >= Utils.FindPricePerShare(stockInformation, o.ShareName)))
+                        {
+                            match = candidate;
+                            index = i;
+                            break;
+                        }
                     }
                 }
             }
@@ -353,7 +375,9 @@ namespace Broker
                 BuyingOrderId = purchase.Id,
                 SellingOrderId = sell.Id,
                 NoOfSharesSold = noOfSharesSold,
-                PricePerShare = Utils.FindPricePerShare(stockInformation, o1.ShareName)
+                PricePerShare = Utils.FindPricePerShare(stockInformation, o1.ShareName),
+                PrioritizedBuyingOrder = purchase.Prioritize,
+                PrioritizedSellingOrder = sell.Prioritize
             };
 
             return t;
@@ -361,7 +385,7 @@ namespace Broker
 
         private static bool IsAffordable(Transaction t)
         {
-            return (t.TotalCost + t.Provision) <= investorDepots[t.BuyerId].Budget; 
+            return (t.TotalCost + t.BuyerProvision) <= investorDepots[t.BuyerId].Budget; 
         }
 
         private static bool HasEnoughShares(Transaction t)
@@ -489,7 +513,7 @@ namespace Broker
             match.Status = (match.NoOfOpenShares == 0) ? Order.OrderStatus.DONE : Order.OrderStatus.PARTIAL;
 
             var buyer = investorDepots[t.BuyerId];
-            buyer.Budget -= (t.TotalCost + t.Provision);
+            buyer.Budget -= (t.TotalCost + t.BuyerProvision);
             buyer.AddShares(t.ShareName, t.NoOfSharesSold);
             investorDepots[t.BuyerId] = buyer;
 
@@ -497,7 +521,7 @@ namespace Broker
             {
                 var seller = investorDepots[t.SellerId];
                 seller.RemoveShares(t.ShareName, t.NoOfSharesSold);
-                seller.Budget += t.TotalCost;
+                seller.Budget += (t.TotalCost - t.SellerProvision);
                 investorDepots[t.SellerId] = seller;
             }
             else if (firmDepots.ContainsKey(t.SellerId))
