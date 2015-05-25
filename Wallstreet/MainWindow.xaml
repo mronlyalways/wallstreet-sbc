@@ -62,6 +62,7 @@
                     <Label Content="{Binding NoOfProcessedShares}"/>
                     <Label Content="Price Limit:"/>
                     <Label Content="{Binding Limit}"/>
+                    <CheckBox IsChecked="{Binding Prioritize}" IsEnabled="False" VerticalAlignment="Center"/>
                 </StackPanel>
             </DataTemplate>
         </ResourceDictionary>

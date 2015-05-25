@@ -233,6 +233,36 @@ namespace Investor.ViewModel
             }
         }
 
+        private bool prioritizeBuying;
+
+        public bool PrioritizeBuying
+        {
+            get
+            {
+                return prioritizeBuying;
+            }
+            set
+            {
+                prioritizeBuying = value;
+                RaisePropertyChanged(() => PrioritizeBuying);
+            }
+        } 
+
+        private bool prioritizeSelling;
+
+        public bool PrioritizeSelling
+        {
+            get
+            {
+                return prioritizeSelling;
+            }
+            set
+            {
+                prioritizeSelling = value;
+                RaisePropertyChanged(() => PrioritizeSelling);
+            }
+        } 
+
         public RelayCommand PlaceBuyingOrderCommand { get; private set; }
 
         public RelayCommand PlaceSellingOrderCommand { get; private set; }
@@ -259,14 +289,14 @@ namespace Investor.ViewModel
         private void PlaceBuyingOrder()
         {
             var id = Email + DateTime.Now.Ticks.ToString();
-            var order = new Order() { Id = id, InvestorId = Email, Type = Order.OrderType.BUY, ShareName = SelectedBuyingShare.FirmName, Limit = UpperPriceLimit, TotalNoOfShares = NoOfSharesBuying, NoOfProcessedShares = 0 };
+            var order = new Order() { Id = id, InvestorId = Email, Type = Order.OrderType.BUY, ShareName = SelectedBuyingShare.FirmName, Limit = UpperPriceLimit, TotalNoOfShares = NoOfSharesBuying, NoOfProcessedShares = 0, Prioritize = PrioritizeBuying };
             data.PlaceOrder(order);
         }
 
         private void PlaceSellingOrder()
         {
             var id = Email + DateTime.Now.Ticks.ToString();
-            var order = new Order() { Id = id, InvestorId = Email, Type = Order.OrderType.SELL, ShareName = SelectedSellingShare.ShareName, Limit = LowerPriceLimit, TotalNoOfShares = NoOfSharesSelling, NoOfProcessedShares = 0 };
+            var order = new Order() { Id = id, InvestorId = Email, Type = Order.OrderType.SELL, ShareName = SelectedSellingShare.ShareName, Limit = LowerPriceLimit, TotalNoOfShares = NoOfSharesSelling, NoOfProcessedShares = 0, Prioritize = PrioritizeSelling };
             data.PlaceOrder(order);
         }
 

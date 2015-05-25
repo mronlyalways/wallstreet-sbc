@@ -27,6 +27,8 @@ namespace SharedFeatures.Model
 
         public int NoOfProcessedShares { get; set; }
 
+        public bool Prioritize { get; set; }
+
         public int NoOfOpenShares
         {
             get
@@ -59,7 +61,7 @@ namespace SharedFeatures.Model
 
         public override string ToString()
         {
-            return base.ToString() + " Id:" + Id + " Status:" + Status + " InvestorId:" + InvestorId + " Type:" + Type + " ShareName:" + ShareName + " Limit:" +Limit + " TotalNoOfShares:" + TotalNoOfShares ;
+            return base.ToString() + " Id:" + Id + " Status:" + Status + " InvestorId:" + InvestorId + " Type:" + Type + " ShareName:" + ShareName + " Limit:" +Limit + " TotalNoOfShares:" + TotalNoOfShares + " Prioritize:" + Prioritize;
         }
 
         public override int GetHashCode()

@@ -51,6 +51,8 @@
                     <Label Content="{Binding NoOfProcessedShares}"/>
                     <Label Content="Price Limit:"/>
                     <Label Content="{Binding Limit}"/>
+                    <Label Content="Prioritize:"/>
+                    <CheckBox IsChecked="{Binding Prioritize}" IsEnabled="False" VerticalAlignment="Center"/>
                 </StackPanel>
             </DataTemplate>
         </ResourceDictionary>
@@ -92,6 +94,10 @@
                         <TextBox Text="{Binding NoOfSharesBuying}" />
                         <Label Content="Upper Price Limit:" />
                         <TextBox Text="{Binding UpperPriceLimit}" />
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Prioritize:"/>
+                            <CheckBox IsChecked="{Binding PrioritizeBuying}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>                        
                         <Button Content="Place Buying Order" Command="{Binding PlaceBuyingOrderCommand}" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Grid.Row="2">
@@ -101,6 +107,10 @@
                         <TextBox Text="{Binding NoOfSharesSelling}" />
                         <Label Content="Lower Price Limit:" />
                         <TextBox Text="{Binding LowerPriceLimit}" />
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Prioritize:"/>
+                            <CheckBox IsChecked="{Binding PrioritizeSelling}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
                         <Button Content="Place Selling Order" Command="{Binding PlaceSellingOrderCommand}" />
                     </StackPanel>
                 </Grid>
