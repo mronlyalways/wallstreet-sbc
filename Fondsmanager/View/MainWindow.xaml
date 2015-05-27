@@ -1,0 +1,130 @@
+﻿<Window x:Class="Fondsmanager.View.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:m="clr-namespace:SharedFeatures.Model;assembly=SharedFeatures"
+        xmlns:im="clr-namespace:Fondsmanager.Model"
+        Title="SBC Investor"
+        DataContext="{Binding Main, Source={StaticResource Locator}}">
+    <Window.Resources>
+        <ResourceDictionary>
+            <DataTemplate x:Key="BuyingShareInformationTemplate" DataType="{x:Type m:ShareInformation}">
+                <StackPanel Orientation="Horizontal" Margin="5,10">
+                    <Label Content="Share Name:"/>
+                    <Label Content="{Binding FirmName}"/>
+                    <Label Content="Share Volume:"/>
+                    <Label Content="{Binding NoOfShares}"/>
+                    <Label Content="Purchase Volume:"/>
+                    <Label Content="{Binding PurchasingVolume}"/>
+                    <Label Content="Sales Volume:"/>
+                    <Label Content="{Binding SalesVolume}"/>
+                    <Label Content="Price per share:"/>
+                    <Label Content="{Binding PricePerShare}"/>
+                </StackPanel>
+            </DataTemplate>
+            <DataTemplate x:Key="SellingShareInformationTemplate" DataType="{x:Type im:OwningShareDTO}">
+                <StackPanel Orientation="Horizontal" Margin="5,10">
+                    <Label Content="Share Name:"/>
+                    <Label Content="{Binding ShareName}"/>
+                    <Label Content="Amount:"/>
+                    <Label Content="{Binding Amount}"/>
+                    <Label Content="Price per share:"/>
+                    <Label Content="{Binding StockPrice}"/>
+                    <Label Content="Value:"/>
+                    <Label Content="{Binding Value}"/>
+                </StackPanel>
+            </DataTemplate>
+            <DataTemplate x:Key="OrderTemplate" DataType="{x:Type m:Order}">
+                <StackPanel Orientation="Horizontal" Margin="5,10">
+                    <Label Content="Order Type:"/>
+                    <Label Content="{Binding Type}"/>
+                    <Label Content="Status:"/>
+                    <Label Content="{Binding Status}"/>
+                    <Label Content="Buyer/Seller:"/>
+                    <Label Content="{Binding InvestorId}"/>
+                    <Label Content="Share Name:"/>
+                    <Label Content="{Binding ShareName}"/>
+                    <Label Content="Total Shares:"/>
+                    <Label Content="{Binding TotalNoOfShares}"/>
+                    <Label Content="Processed Shares:"/>
+                    <Label Content="{Binding NoOfProcessedShares}"/>
+                    <Label Content="Price Limit:"/>
+                    <Label Content="{Binding Limit}"/>
+                    <Label Content="Prioritize:"/>
+                    <CheckBox IsChecked="{Binding Prioritize}" IsEnabled="False" VerticalAlignment="Center"/>
+                </StackPanel>
+            </DataTemplate>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0" Margin="0,5,0,10" HorizontalAlignment="Stretch">
+            <Label Content="Account:" />
+            <Label Content="{Binding Email}" />
+            <Label Margin="10,0,0,0" Content="Budget:" />
+            <Label Content="{Binding Budget}" />
+            <Label Margin="10,0,0,0" Content="Depot value:" />
+            <Label Content="{Binding DepotValue}" />
+            <Button Margin="0,0,10,0" HorizontalAlignment="Right" Content="Logout" Command="{Binding LogoutCommand}" />
+        </DockPanel>
+        <TabControl Grid.Row="1">
+            <TabItem Header="Market">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Label Grid.Column="0" Grid.Row="0" Content="Buy"/>
+                    <Label Grid.Column="1" Grid.Row="0" Content="Sell"/>
+                    <ListBox Grid.Column="0" Grid.Row="1" ItemTemplate="{StaticResource BuyingShareInformationTemplate}" ItemsSource="{Binding MarketInformation}" SelectedItem="{Binding SelectedBuyingShare}"/>
+                    <ListBox Grid.Column="1" Grid.Row="1" ItemTemplate="{StaticResource SellingShareInformationTemplate}" ItemsSource="{Binding OwnedShares}" SelectedItem="{Binding SelectedSellingShare}"/>
+                    <StackPanel Grid.Column="0" Grid.Row="2">
+                        <Label Content="Share to be aquired:" />
+                        <Label Content="{Binding SelectedBuyingShare}" />
+                        <Label Content="Number of shares:" />
+                        <TextBox Text="{Binding NoOfSharesBuying}" />
+                        <Label Content="Upper Price Limit:" />
+                        <TextBox Text="{Binding UpperPriceLimit}" />
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Prioritize:"/>
+                            <CheckBox IsChecked="{Binding PrioritizeBuying}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>                        
+                        <Button Content="Place Buying Order" Command="{Binding PlaceBuyingOrderCommand}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Grid.Row="2">
+                        <Label Content="Share to be sold:" />
+                        <Label Content="{Binding SelectedSellingShare}" />
+                        <Label Content="Number of shares:" />
+                        <TextBox Text="{Binding NoOfSharesSelling}" />
+                        <Label Content="Lower Price Limit:" />
+                        <TextBox Text="{Binding LowerPriceLimit}" />
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="Prioritize:"/>
+                            <CheckBox IsChecked="{Binding PrioritizeSelling}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button Content="Place Selling Order" Command="{Binding PlaceSellingOrderCommand}" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Pending Orders">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <ListBox ItemTemplate="{StaticResource OrderTemplate}" ItemsSource="{Binding PendingOrders}" SelectedItem="{Binding SelectedPendingOrder}" />
+                    <Button Grid.Row="1" Content="Cancel Order" Command="{Binding CancelPendingOrderCommand}" />
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wallstreet", "Wallstreet\Wallstreet.csproj", "{09918A19-31B5-48C6-9078-47B6B7F042B4}"
 EndProject
@@ -18,6 +18,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Investor", "Investor\Investor.csproj", "{38FEA802-9706-453B-9722-B12B004463CD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrokerTest", "BrokerTest\BrokerTest.csproj", "{0D2FBE0E-FAD3-4BF6-97F3-CFF4D0721FE4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fondsmanager", "Fondsmanager\Fondsmanager.csproj", "{73941CF8-5305-4423-ACE1-C3BBFCE6D580}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +59,10 @@ Global
 		{0D2FBE0E-FAD3-4BF6-97F3-CFF4D0721FE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D2FBE0E-FAD3-4BF6-97F3-CFF4D0721FE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D2FBE0E-FAD3-4BF6-97F3-CFF4D0721FE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73941CF8-5305-4423-ACE1-C3BBFCE6D580}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73941CF8-5305-4423-ACE1-C3BBFCE6D580}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73941CF8-5305-4423-ACE1-C3BBFCE6D580}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73941CF8-5305-4423-ACE1-C3BBFCE6D580}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
