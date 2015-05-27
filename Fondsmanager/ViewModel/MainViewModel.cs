@@ -18,12 +18,12 @@ namespace Fondsmanager.ViewModel
         public MainViewModel(IDataService data)
         {
             this.data = data;
-            //TODO: depot = data.LoadInvestorInformation();
+            depot = data.LoadFundInformation();
             MarketInformation = new ObservableCollection<ShareInformation>(data.LoadMarketInformation());
             OwnedShares = new ObservableCollection<OwningShareDTO>();
             UpdateOwnedShares();
             PendingOrders = new ObservableCollection<Order>(data.LoadPendingOrders());
-            //TODO: data.AddNewInvestorInformationAvailableCallback(UpdateInvestorInformation);
+            data.AddNewInvestorInformationAvailableCallback(UpdateFundInformation);
             data.AddNewMarketInformationAvailableCallback(UpdateShareInformation);
             data.AddNewPendingOrdersCallback(o => PendingOrders = new ObservableCollection<Order>(o));
             PlaceBuyingOrderCommand = new RelayCommand(PlaceBuyingOrder, () => SelectedBuyingShare != null);

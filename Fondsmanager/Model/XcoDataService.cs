@@ -17,31 +17,31 @@ namespace Fondsmanager.Model
     {
         private readonly Uri spaceServerUri = new Uri("xco://" + Environment.MachineName + ":" + 9000);
         private XcoSpace space;
-        private XcoQueue<Registration> registrations;
-        private XcoDictionary<string, InvestorDepot> investorDepots;
+        private XcoQueue<FundRegistration> registrations;
+        private XcoDictionary<string, FundDepot> fundDepots;
         private XcoList<ShareInformation> stockInformation;
         private XcoList<Order> orders;
         private XcoQueue<Order> orderQueue;
         private IList<Action<ShareInformation>> marketCallbacks;
-        private IList<Action<InvestorDepot>> investorDepotCallbacks;
+        private IList<Action<FundDepot>> fundDepotCallbacks;
         private IList<Action<IEnumerable<Order>>> pendingOrdersCallback;
         private IList<ShareInformation> shareInformationCache;
         private IList<Order> orderCache;
-        private Registration registration;
-        private InvestorDepot depot;
+        private FundRegistration registration;
+        private FundDepot depot;
 
         public XcoDataService()
         {
             space = new XcoSpace(0);
             marketCallbacks = new List<Action<ShareInformation>>();
-            investorDepotCallbacks = new List<Action<InvestorDepot>>();
+            fundDepotCallbacks = new List<Action<FundDepot>>();
             pendingOrdersCallback = new List<Action<IEnumerable<Order>>>();
             shareInformationCache = new List<ShareInformation>();
             orderCache = new List<Order>();
             depot = null;
-            registrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", spaceServerUri);
-            investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServerUri);
-            investorDepots.AddNotificationForEntryAdd(OnInvestorDepotAdded);
+            //TODO: registrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", spaceServerUri);
+            //TODO: investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServerUri);
+            //TODO: investorDepots.AddNotificationForEntryAdd(OnInvestorDepotAdded);
             stockInformation = space.Get<XcoList<ShareInformation>>("StockInformation", spaceServerUri);
             stockInformation.AddNotificationForEntryAdd(OnShareInformationAdded);
             orders = space.Get<XcoList<Order>>("Orders", spaceServerUri);
@@ -49,7 +49,7 @@ namespace Fondsmanager.Model
             orderQueue = space.Get<XcoQueue<Order>>("OrderQueue", spaceServerUri);
         }
 
-        public void Login(Registration r)
+        public void Login(FundRegistration r)
         {
             registration = r;
             using (XcoTransaction tx = space.BeginTransaction())
@@ -109,7 +109,7 @@ namespace Fondsmanager.Model
             }
         }
 
-        public InvestorDepot LoadInvestorInformation()
+        public FundDepot LoadFundInformation()
         {
             return depot;
         }
@@ -130,15 +130,17 @@ namespace Fondsmanager.Model
 
                         for (int i = 0; i < stockInformation.Count; i++) {
                             ShareInformation s = stockInformation[i];
-
-                        shareInformationCache.Add(new ShareInformation()
-                        {
-                            FirmName = s.FirmName,
-                            NoOfShares = s.NoOfShares,
-                            PurchasingVolume = GetPurchasingVolume(orderCache, s.FirmName),
-                            SalesVolume = GetSalesVolume(orderCache, s.FirmName),
-                            PricePerShare = s.PricePerShare
-                        });
+                            if (!isFund(s))
+                            {
+                                shareInformationCache.Add(new ShareInformation()
+                                {
+                                    FirmName = s.FirmName,
+                                    NoOfShares = s.NoOfShares,
+                                    PurchasingVolume = GetPurchasingVolume(orderCache, s.FirmName),
+                                    SalesVolume = GetSalesVolume(orderCache, s.FirmName),
+                                    PricePerShare = s.PricePerShare
+                                });
+                            }
                     }
 
                     tx.Commit();
@@ -153,13 +155,19 @@ namespace Fondsmanager.Model
             return shareInformationCache;
         }
 
+        public bool isFund(ShareInformation share)
+        {
+            //TODO: implement
+            return true;
+        }
+
         public IEnumerable<Order> LoadPendingOrders()
         {
             if (orderCache.Count == 0)
             {
                 LoadMarketInformation();
             }
-            return orderCache.Where(x => x.InvestorId == depot.Email && x.NoOfOpenShares > 0);
+            return orderCache.Where(x => x.InvestorId == depot.FundID && x.NoOfOpenShares > 0);
         }
 
         public void AddNewMarketInformationAvailableCallback(Action<ShareInformation> callback)
@@ -167,9 +175,9 @@ namespace Fondsmanager.Model
             marketCallbacks.Add(callback);
         }
 
-        public void AddNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback)
+        public void AddNewInvestorInformationAvailableCallback(Action<FundDepot> callback)
         {
-            investorDepotCallbacks.Add(callback);
+            fundDepotCallbacks.Add(callback);
         }
 
         public void AddNewPendingOrdersCallback(Action<IEnumerable<Order>> callback)
@@ -177,26 +185,29 @@ namespace Fondsmanager.Model
             pendingOrdersCallback.Add(callback);
         }
 
-        public void RemoveNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback)
+        public void RemoveNewInvestorInformationAvailableCallback(Action<FundDepot> callback)
         {
-            investorDepotCallbacks.Remove(callback);
+            fundDepotCallbacks.Remove(callback);
         }
 
-        private void OnInvestorDepotAdded(XcoDictionary<string, InvestorDepot> source, string key, InvestorDepot d)
+        private void OnFundDepotAdded(XcoDictionary<string, FundDepot> source, string key, FundDepot d)
         {
-            if (this.registration != null && this.registration.Email == key)
+            if (this.registration != null && this.registration.FundID == key)
             {
                 depot = d;
-                ExecuteOnGUIThread(investorDepotCallbacks, d);
+                ExecuteOnGUIThread(fundDepotCallbacks, d);
             }
         }
 
         private void OnShareInformationAdded(XcoList<ShareInformation> source, ShareInformation share, int index)
         {
-            share.PurchasingVolume = GetPurchasingVolume(orderCache, share.FirmName);
-            share.SalesVolume = GetSalesVolume(orderCache, share.FirmName);
-            shareInformationCache.Add(share);
-            ExecuteOnGUIThread(marketCallbacks, share);
+            if (!isFund(share))
+            {
+                share.PurchasingVolume = GetPurchasingVolume(orderCache, share.FirmName);
+                share.SalesVolume = GetSalesVolume(orderCache, share.FirmName);
+                shareInformationCache.Add(share);
+                ExecuteOnGUIThread(marketCallbacks, share);
+            }
         }
 
         private void OnNewOrderAdded(XcoList<Order> source, Order order, int index)
@@ -225,7 +236,7 @@ namespace Fondsmanager.Model
 
         private void UpdatePendingOrders()
         {
-            var pendingOrders = orderCache.Where(x => x.InvestorId == depot.Email && x.NoOfOpenShares > 0 && x.Status != Order.OrderStatus.DONE && x.Status != Order.OrderStatus.DELETED);
+            var pendingOrders = orderCache.Where(x => x.InvestorId == depot.FundID && x.NoOfOpenShares > 0 && x.Status != Order.OrderStatus.DONE && x.Status != Order.OrderStatus.DELETED);
             ExecuteOnGUIThread(pendingOrdersCallback, pendingOrders);
         }
 

@@ -90,13 +90,13 @@ namespace Fondsmanager.ViewModel
 
         public void Submit()
         {
-            //TODO: data.Login(new Registration() { Email = Email, Budget = Budget });
+            data.Login(new FundRegistration() { FundID = FundID, FundAssets = FundAssests, FundShares = FundShares });
             ButtonText = "Waiting for confirmation ...";
             submitted = true;
             SubmitCommand.RaiseCanExecuteChanged();
         }
 
-        public void OnRegistrationConfirmed(InvestorDepot depot)
+        public void OnRegistrationConfirmed(FundDepot depot)
         {
             Messenger.Default.Send<NotificationMessage>(new NotificationMessage(this, "Close"));
             var MainWindow = new MainWindow();

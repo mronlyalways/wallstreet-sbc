@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="Model\FirmDepot.cs" />
     <Compile Include="Model\FundDepot.cs" />
+    <Compile Include="Model\FundRegistration.cs" />
     <Compile Include="Model\Order.cs" />
     <Compile Include="Model\Registration.cs" />
     <Compile Include="Model\Request.cs" />

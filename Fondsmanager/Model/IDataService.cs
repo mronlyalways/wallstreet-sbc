@@ -11,13 +11,13 @@ namespace Fondsmanager.Model
 {
     public interface IDataService : IDisposable
     {
-        void Login(Registration r);
+        void Login(FundRegistration r);
 
         void PlaceOrder(Order order);
 
         void CancelOrder(Order order);
 
-        InvestorDepot LoadInvestorInformation();
+        FundDepot LoadFundInformation();
 
         IEnumerable<ShareInformation> LoadMarketInformation();
 
@@ -27,8 +27,8 @@ namespace Fondsmanager.Model
 
         void AddNewPendingOrdersCallback(Action<IEnumerable<Order>> callback);
 
-        void AddNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback);
+        void AddNewInvestorInformationAvailableCallback(Action<FundDepot> callback);
 
-        void RemoveNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback);
+        void RemoveNewInvestorInformationAvailableCallback(Action<FundDepot> callback);
     }
 }
