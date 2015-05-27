@@ -55,9 +55,9 @@ namespace Fondsmanager.ViewModel
             }
         }
 
-        private long fundshares;
+        private int fundshares;
 
-        public long FundShares
+        public int FundShares
         {
             get
             {

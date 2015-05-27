@@ -20,6 +20,8 @@ namespace Wallstreet.Model
         private XcoDictionary<string, InvestorDepot> investorDepots;
         private XcoQueue<FundRegistration> fundDepotRegistrations;
         private XcoDictionary<string, FundDepot> fundDepots;
+        private XcoDictionary<string, FirmDepot> firmDepots;
+        private XcoQueue<FundDepot> fundDepotQueue;
         private XcoList<Order> orders;
         private XcoList<Transaction> transactions;
         private IList<Action<ShareInformation>> marketCallbacks;
@@ -42,6 +44,8 @@ namespace Wallstreet.Model
             fundDepotRegistrations = space.Get<XcoQueue<FundRegistration>>("FundRegistrations", spaceServerUri);
             fundDepotRegistrations.AddNotificationForEntryEnqueued(OnFundRegistrationEntryAdded);
             fundDepots = space.Get<XcoDictionary<string, FundDepot>>("FundDepots", spaceServerUri);
+            fundDepotQueue = space.Get<XcoQueue<FundDepot>>("FundDepotQueue", spaceServerUri);
+            firmDepots = space.Get<XcoDictionary<string, FirmDepot>>("FirmDepots", spaceServerUri);
             orders = space.Get<XcoList<Order>>("Orders", spaceServerUri);
             orders.AddNotificationForEntryAdd(OnOrderEntryAdded);
             orders.AddNotificationForEntryRemove(OnOrderEntryRemoved);
@@ -214,8 +218,12 @@ namespace Wallstreet.Model
             }
             else
             {
-                depot = new FundDepot() { FundID = reg.FundID, FundShares = reg.FundShares, FundAssets = reg.FundAssets };
-                fundDepots.Add(reg.FundID, depot);
+                if (!investorDepots.ContainsKey(reg.FundID) && !firmDepots.ContainsKey(reg.FundID))
+                {
+                    depot = new FundDepot() { FundID = reg.FundID, FundShares = reg.FundShares, FundAssets = reg.FundAssets };
+                    fundDepots.Add(reg.FundID, depot);
+                    fundDepotQueue.Enqueue(depot);
+                }
             }
         }
 

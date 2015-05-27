@@ -21,7 +21,7 @@ namespace SharedFeatures.Model
             set;
         }
 
-        public long FundShares
+        public int FundShares
         {
             get;
             set;

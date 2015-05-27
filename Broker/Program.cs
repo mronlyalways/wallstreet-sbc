@@ -26,6 +26,8 @@ namespace Broker
         private static XcoQueue<Order> orderQueue;
         private static XcoDictionary<string, InvestorDepot> investorDepots;
         private static XcoDictionary<string, FirmDepot> firmDepots;
+        private static XcoQueue<FundDepot> fundDepotQueue;
+        private static XcoDictionary<string, FundDepot> fundDepots;
         private static XcoList<Transaction> transactions;
         private static XcoList<ShareInformation> stockInformation;
         private static XcoQueue<string> stockInformationUpdates;
@@ -56,6 +58,8 @@ namespace Broker
             stockInformation.Dispose();
             transactions.Dispose();
             firmDepots.Dispose();
+            fundDepotQueue.Dispose();
+            fundDepots.Dispose();
             investorDepots.Dispose();
             orderQueue.Dispose();
             orders.Dispose();
@@ -90,6 +94,9 @@ namespace Broker
                 orderQueue = space.Get<XcoQueue<Order>>("OrderQueue", spaceServer);
                 investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServer);
                 firmDepots = space.Get<XcoDictionary<string, FirmDepot>>("FirmDepots", spaceServer);
+                fundDepots = space.Get<XcoDictionary<string, FundDepot>>("FundDepots", spaceServer);
+                fundDepotQueue = space.Get<XcoQueue<FundDepot>>("FundDepotQueue", spaceServer);
+                fundDepotQueue.AddNotificationForEntryEnqueued(OnFundDepotAddedToQueue);
                 stockInformation = space.Get<XcoList<ShareInformation>>("StockInformation", spaceServer);
                 stockInformationUpdates = space.Get<XcoQueue<string>>("StockInformationUpdates", spaceServer);
 
@@ -204,6 +211,50 @@ namespace Broker
                     Console.WriteLine("Unable to reach server.\nPress enter to exit.");
                     Console.ReadLine();
                 }
+        }
+
+        public static void OnFundDepotAddedToQueue(XcoQueue<FundDepot> source, FundDepot depot)
+        {
+
+            using (XcoTransaction tx = space.BeginTransaction())
+            {
+                try
+                {
+                    FundDepot d = source.Dequeue(false);
+
+                    if (d != null)
+                    {
+                            ShareInformation s = new ShareInformation()
+                            {
+                                FirmName = depot.FundID,
+                                NoOfShares = depot.FundShares,
+                                PricePerShare = depot.FundAssets / depot.FundShares
+                            };
+                            stockInformation.Add(s);
+                        
+                        var orderId = depot.FundID + DateTime.Now.Ticks.ToString();
+                        Order o = new Order()
+                        {
+                            Id = orderId,
+                            InvestorId = depot.FundID,
+                            ShareName = depot.FundID,
+                            Type = Order.OrderType.SELL,
+                            Limit = 0,
+                            NoOfProcessedShares = 0,
+                            TotalNoOfShares = depot.FundShares
+                        };
+                        orderQueue.Enqueue(o);
+
+                    }
+
+                    tx.Commit();
+                }
+                catch (XcoException e)
+                {
+                    Console.WriteLine(e.Message);
+                    tx.Rollback();
+                }
+            }
         }
 
         private static void OnShareInformationAddedToQueue(XcoQueue<string> queue, string shareKey) {
