@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Fondsmanager.View.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Fondsmanager Login" Height="300" Width="300"
+        Title="Fund manager login" Height="300" Width="300"
         DataContext="{Binding Login, Source={StaticResource Locator}}">
     <Grid>
         <Grid.RowDefinitions>
