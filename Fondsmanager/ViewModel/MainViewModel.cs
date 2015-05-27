@@ -13,17 +13,17 @@ namespace Fondsmanager.ViewModel
     public class MainViewModel : ViewModelBase
     {
         private IDataService data;
-        private InvestorDepot depot;
+        private FundDepot depot;
                 
         public MainViewModel(IDataService data)
         {
             this.data = data;
-            depot = data.LoadInvestorInformation();
+            //TODO: depot = data.LoadInvestorInformation();
             MarketInformation = new ObservableCollection<ShareInformation>(data.LoadMarketInformation());
             OwnedShares = new ObservableCollection<OwningShareDTO>();
             UpdateOwnedShares();
             PendingOrders = new ObservableCollection<Order>(data.LoadPendingOrders());
-            data.AddNewInvestorInformationAvailableCallback(UpdateInvestorInformation);
+            //TODO: data.AddNewInvestorInformationAvailableCallback(UpdateInvestorInformation);
             data.AddNewMarketInformationAvailableCallback(UpdateShareInformation);
             data.AddNewPendingOrdersCallback(o => PendingOrders = new ObservableCollection<Order>(o));
             PlaceBuyingOrderCommand = new RelayCommand(PlaceBuyingOrder, () => SelectedBuyingShare != null);
@@ -32,10 +32,10 @@ namespace Fondsmanager.ViewModel
             LogoutCommand = new RelayCommand(Logout, () => true);
         }
 
-        private void UpdateInvestorInformation(InvestorDepot d)
+        private void UpdateFundInformation(FundDepot d)
         {
             depot = d;
-            RaisePropertyChanged(() => Budget);
+            RaisePropertyChanged(() => FundAssests);
             UpdateOwnedShares();
         }
 
@@ -72,9 +72,11 @@ namespace Fondsmanager.ViewModel
             UpdateOwnedShares();
         }
 
-        public string Email { get { return depot.Email; } }
+        public string FundID { get { return depot.FundID; } }
 
-        public double Budget { get { return depot.Budget; } }
+        public double FundAssests { get { 
+            return depot.FundAssets; 
+        } }
 
         public double DepotValue
         {
@@ -288,15 +290,15 @@ namespace Fondsmanager.ViewModel
 
         private void PlaceBuyingOrder()
         {
-            var id = Email + DateTime.Now.Ticks.ToString();
-            var order = new Order() { Id = id, InvestorId = Email, Type = Order.OrderType.BUY, ShareName = SelectedBuyingShare.FirmName, Limit = UpperPriceLimit, TotalNoOfShares = NoOfSharesBuying, NoOfProcessedShares = 0, Prioritize = PrioritizeBuying };
+            var id = FundID + DateTime.Now.Ticks.ToString();
+            var order = new Order() { Id = id, InvestorId = FundID, Type = Order.OrderType.BUY, ShareName = SelectedBuyingShare.FirmName, Limit = UpperPriceLimit, TotalNoOfShares = NoOfSharesBuying, NoOfProcessedShares = 0, Prioritize = PrioritizeBuying };
             data.PlaceOrder(order);
         }
 
         private void PlaceSellingOrder()
         {
-            var id = Email + DateTime.Now.Ticks.ToString();
-            var order = new Order() { Id = id, InvestorId = Email, Type = Order.OrderType.SELL, ShareName = SelectedSellingShare.ShareName, Limit = LowerPriceLimit, TotalNoOfShares = NoOfSharesSelling, NoOfProcessedShares = 0, Prioritize = PrioritizeSelling };
+            var id = FundID + DateTime.Now.Ticks.ToString();
+            var order = new Order() { Id = id, InvestorId = FundID, Type = Order.OrderType.SELL, ShareName = SelectedSellingShare.ShareName, Limit = LowerPriceLimit, TotalNoOfShares = NoOfSharesSelling, NoOfProcessedShares = 0, Prioritize = PrioritizeSelling };
             data.PlaceOrder(order);
         }
 
