@@ -157,8 +157,19 @@ namespace Fondsmanager.Model
 
         public bool isFund(ShareInformation share)
         {
-            //TODO: implement
-            return true;
+            using (XcoTransaction tx = space.BeginTransaction())
+            {
+                bool isfund = false;
+
+                foreach (String fondid in fundDepots.Keys)
+                {
+                    isfund |= fondid.Equals(share.FirmName);
+                }
+
+                tx.Commit();
+                return isfund;
+
+            }
         }
 
         public IEnumerable<Order> LoadPendingOrders()
