@@ -17,39 +17,56 @@ namespace Fondsmanager.ViewModel
         {
             this.data = data;
             data.AddNewInvestorInformationAvailableCallback(OnRegistrationConfirmed);
-            SubmitCommand = new RelayCommand(Submit, () => !Email.Equals(string.Empty) && Budget >= 0 && !submitted);
-            Email = string.Empty;
-            Budget = 0;
+            SubmitCommand = new RelayCommand(Submit, () => !FundID.Equals(string.Empty) && FundAssests >= 0 && FundShares >= 0 && !submitted);
+            FundID = string.Empty;
+            FundAssests = 0;
+            FundShares = 0;
             ButtonText = "Submit";
             submitted = false;
         }
 
-        private string email;
-        public string Email
+        private string fundid;
+        public string FundID
         {
             get
             {
-                return email;
+                return fundid;
             }
             set
             {
-                email = value;
-                RaisePropertyChanged(() => Email);
+                fundid = value;
+                RaisePropertyChanged(() => FundID);
                 SubmitCommand.RaiseCanExecuteChanged();
             }
         }
 
-        private double budget;
-        public double Budget
+        private double fundassets;
+        public double FundAssests
         {
             get
             {
-                return budget;
+                return fundassets;
             }
             set
             {
-                budget = value;
-                RaisePropertyChanged(() => Budget);
+                fundassets = value;
+                RaisePropertyChanged(() => FundAssests);
+                SubmitCommand.RaiseCanExecuteChanged();
+            }
+        }
+
+        private long fundshares;
+
+        public long FundShares
+        {
+            get
+            {
+                return fundshares;
+            }
+            set
+            {
+                fundshares = value;
+                RaisePropertyChanged(() => FundShares);
                 SubmitCommand.RaiseCanExecuteChanged();
             }
         }
@@ -73,7 +90,7 @@ namespace Fondsmanager.ViewModel
 
         public void Submit()
         {
-            data.Login(new Registration() { Email = Email, Budget = Budget });
+            //TODO: data.Login(new Registration() { Email = Email, Budget = Budget });
             ButtonText = "Waiting for confirmation ...";
             submitted = true;
             SubmitCommand.RaiseCanExecuteChanged();
