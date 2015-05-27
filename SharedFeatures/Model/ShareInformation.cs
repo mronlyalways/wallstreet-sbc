@@ -18,5 +18,7 @@ namespace SharedFeatures.Model
         public int SalesVolume { get; set; }
 
         public double PricePerShare { get; set; }
+
+        public bool isFund { get; set; }
     }
 }

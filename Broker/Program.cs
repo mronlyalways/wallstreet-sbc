@@ -228,7 +228,8 @@ namespace Broker
                             {
                                 FirmName = depot.FundID,
                                 NoOfShares = depot.FundShares,
-                                PricePerShare = depot.FundAssets / depot.FundShares
+                                PricePerShare = depot.FundAssets / depot.FundShares,
+                                isFund = true
                             };
                             stockInformation.Add(s);
                         
