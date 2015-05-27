@@ -35,7 +35,7 @@ namespace Fondsmanager.ViewModel
         private void UpdateFundInformation(FundDepot d)
         {
             depot = d;
-            RaisePropertyChanged(() => FundAssests);
+            RaisePropertyChanged(() => FundAssets);
             UpdateOwnedShares();
         }
 
@@ -60,7 +60,7 @@ namespace Fondsmanager.ViewModel
 
             OwnedShares = collection;
 
-            RaisePropertyChanged(() => DepotValue);
+            RaisePropertyChanged(() => FundAssets);
 
         }
 
@@ -74,11 +74,11 @@ namespace Fondsmanager.ViewModel
 
         public string FundID { get { return depot.FundID; } }
 
-        public double FundAssests { get { 
-            return depot.FundAssets; 
+        public long FundShares { get { 
+            return depot.FundShares; 
         } }
 
-        public double DepotValue
+        public double FundAssets
         {
             get
             {
@@ -87,6 +87,8 @@ namespace Fondsmanager.ViewModel
                 {
                     value += s.Value;
                 }
+
+                value += depot.FundAssets;
 
                 return value;
             }

@@ -18,6 +18,8 @@ namespace Wallstreet.Model
         private XcoList<ShareInformation> stockInformation;
         private XcoQueue<Registration> investorDepotRegistrations;
         private XcoDictionary<string, InvestorDepot> investorDepots;
+        private XcoQueue<FundRegistration> fundDepotRegistrations;
+        private XcoDictionary<string, FundDepot> fundDepots;
         private XcoList<Order> orders;
         private XcoList<Transaction> transactions;
         private IList<Action<ShareInformation>> marketCallbacks;
@@ -37,6 +39,9 @@ namespace Wallstreet.Model
             investorDepotRegistrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", spaceServerUri);
             investorDepotRegistrations.AddNotificationForEntryEnqueued(OnRegistrationEntryAdded);
             investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServerUri);
+            fundDepotRegistrations = space.Get<XcoQueue<FundRegistration>>("FundRegistrations", spaceServerUri);
+            fundDepotRegistrations.AddNotificationForEntryEnqueued(OnFundRegistrationEntryAdded);
+            fundDepots = space.Get<XcoDictionary<string, FundDepot>>("FundDepots", spaceServerUri);
             orders = space.Get<XcoList<Order>>("Orders", spaceServerUri);
             orders.AddNotificationForEntryAdd(OnOrderEntryAdded);
             orders.AddNotificationForEntryRemove(OnOrderEntryRemoved);
@@ -157,6 +162,25 @@ namespace Wallstreet.Model
             }
         }
 
+        private void OnFundRegistrationEntryAdded(XcoQueue<FundRegistration> source, FundRegistration r)
+        {
+            using (XcoTransaction tx = space.BeginTransaction())
+            {
+                try
+                {
+                    FundRegistration reg = source.Dequeue();
+
+                    HandleFundRegistration(reg);
+                    tx.Commit();
+                }
+                catch (XcoException e)
+                {
+                    Console.WriteLine(e.Message);
+                    tx.Rollback();
+                }
+            }
+        }
+
         private void HandleRegistration(Registration reg)
         {
             InvestorDepot depot;
@@ -178,6 +202,20 @@ namespace Wallstreet.Model
             else
             {
                 investorDepots.Add(reg.Email, depot);
+            }
+        }
+
+        private void HandleFundRegistration(FundRegistration reg)
+        {
+            FundDepot depot;
+            if (fundDepots.ContainsKey(reg.FundID))
+            {
+                depot = fundDepots[reg.FundID];
+            }
+            else
+            {
+                depot = new FundDepot() { FundID = reg.FundID, FundShares = reg.FundShares, FundAssets = reg.FundAssets };
+                fundDepots.Add(reg.FundID, depot);
             }
         }
 

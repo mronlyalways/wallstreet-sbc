@@ -39,9 +39,9 @@ namespace Fondsmanager.Model
             shareInformationCache = new List<ShareInformation>();
             orderCache = new List<Order>();
             depot = null;
-            //TODO: registrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", spaceServerUri);
-            //TODO: investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServerUri);
-            //TODO: investorDepots.AddNotificationForEntryAdd(OnInvestorDepotAdded);
+            registrations = space.Get<XcoQueue<FundRegistration>>("FundRegistrations", spaceServerUri);
+            fundDepots = space.Get<XcoDictionary<string, FundDepot>>("FundDepots", spaceServerUri);
+            fundDepots.AddNotificationForEntryAdd(OnFundDepotAdded);
             stockInformation = space.Get<XcoList<ShareInformation>>("StockInformation", spaceServerUri);
             stockInformation.AddNotificationForEntryAdd(OnShareInformationAdded);
             orders = space.Get<XcoList<Order>>("Orders", spaceServerUri);

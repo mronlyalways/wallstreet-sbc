@@ -64,11 +64,11 @@
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0" Margin="0,5,0,10" HorizontalAlignment="Stretch">
             <Label Content="Fund-ID:" />
-            <Label Content="{Binding Email}" />
+            <Label Content="{Binding FundID}" />
             <Label Margin="10,0,0,0" Content="Fund shares:" />
-            <Label Content="{Binding Budget}" />
+            <Label Content="{Binding FundShares}" />
             <Label Margin="10,0,0,0" Content="Fund assets:" />
-            <Label Content="{Binding DepotValue}" />
+            <Label Content="{Binding FundAssets}" />
             <Button Margin="0,0,10,0" HorizontalAlignment="Right" Content="Logout" Command="{Binding LogoutCommand}" />
         </DockPanel>
         <TabControl Grid.Row="1">

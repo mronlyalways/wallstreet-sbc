@@ -9,6 +9,11 @@ namespace SharedFeatures.Model
     [Serializable]
     public class FundDepot
     {
+        public FundDepot()
+        {
+            Shares = new Dictionary<string, int>();
+        }
+
         public string FundID
         {
             get;
@@ -21,7 +26,7 @@ namespace SharedFeatures.Model
             set;
         }
 
-        public long FundAssets
+        public double FundAssets
         {
             get;
             set;
