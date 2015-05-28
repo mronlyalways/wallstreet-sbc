@@ -61,7 +61,7 @@ namespace Investor.Model
                 }
                 catch (XcoException e)
                 {
-                    Console.WriteLine("Investor: " + e.Message);
+                    Console.WriteLine("Investor: " + e.StackTrace);
                     tx.Rollback();
                 }
             }
@@ -145,7 +145,7 @@ namespace Investor.Model
                 }
                 catch (XcoException e)
                 {
-                    Console.WriteLine("Investor: " + e.Message);
+                    Console.WriteLine("Investor: " + e.StackTrace);
                     tx.Rollback();
                 }
             }

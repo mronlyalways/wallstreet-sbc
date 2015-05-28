@@ -73,7 +73,7 @@ namespace Wallstreet.Model
                 }
                 catch (XcoException e)
                 {
-                    Console.WriteLine("Wallstreet: " + e.Message);
+                    Console.WriteLine("Wallstreet: " + e.StackTrace);
                     tx.Rollback();
                 }
             }
@@ -160,7 +160,7 @@ namespace Wallstreet.Model
                 }
                 catch (XcoException e)
                 {
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e.StackTrace);
                     tx.Rollback();
                 }
             }
@@ -179,7 +179,7 @@ namespace Wallstreet.Model
                 }
                 catch (XcoException e)
                 {
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e.StackTrace);
                     tx.Rollback();
                 }
             }

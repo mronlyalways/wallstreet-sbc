@@ -252,7 +252,7 @@ namespace Broker
                 }
                 catch (XcoException e)
                 {
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e.StackTrace);
                     tx.Rollback();
                 }
             }
@@ -268,7 +268,7 @@ namespace Broker
             }
             catch (XcoException e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
             }
 
             if (s != null)
@@ -300,7 +300,7 @@ namespace Broker
                     }
                     catch (XcoException e)
                     {
-                        Console.WriteLine(e.Message);
+                        Console.WriteLine(e.StackTrace);
                         tx.Rollback();
                     }
                 }
@@ -317,7 +317,7 @@ namespace Broker
             }
             catch (XcoException e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
             }
             
             if (o != null)
@@ -344,7 +344,7 @@ namespace Broker
                     }
                     catch (XcoException e)
                     {
-                        Console.WriteLine(e.Message);
+                        Console.WriteLine(e.StackTrace);
                         Console.WriteLine(e.StackTrace);
                         tx.Rollback();
                         orderQueue.Enqueue(o);

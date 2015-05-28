@@ -61,7 +61,7 @@ namespace Fondsmanager.Model
                 }
                 catch (XcoException e)
                 {
-                    Console.WriteLine("Investor: " + e.Message);
+                    Console.WriteLine("Investor: " + e.StackTrace);
                     tx.Rollback();
                 }
             }
@@ -147,7 +147,7 @@ namespace Fondsmanager.Model
                 }
                 catch (XcoException e)
                 {
-                    Console.WriteLine("Investor: " + e.Message);
+                    Console.WriteLine("Investor: " + e.StackTrace);
                     tx.Rollback();
                 }
             }
