@@ -437,7 +437,14 @@ namespace Broker
 
         private static bool IsAffordable(Transaction t)
         {
-            return (t.TotalCost + t.BuyerProvision + t.FundProvision) <= Utils.FindElement(investorDepots, t.BuyerId, "Email").Budget; 
+            if (Utils.FindElement(fundDepots, t.BuyerId, "FundID") != null)
+            {
+                return (t.TotalCost + t.BuyerProvision) <= Utils.FindElement(fundDepots, t.BuyerId, "FundID").FundBank;
+            }
+            else
+            {
+                return (t.TotalCost + t.BuyerProvision + t.FundProvision) <= Utils.FindElement(investorDepots, t.BuyerId, "Email").Budget;
+            }
         }
 
         private static bool HasEnoughShares(Transaction t)
@@ -585,10 +592,20 @@ namespace Broker
             o.Status = (o.NoOfOpenShares == 0) ? Order.OrderStatus.DONE : Order.OrderStatus.PARTIAL;
             match.Status = (match.NoOfOpenShares == 0) ? Order.OrderStatus.DONE : Order.OrderStatus.PARTIAL;
 
-            var buyer = Utils.FindElement(investorDepots, t.BuyerId, "Email");
-            buyer.Budget -= (t.TotalCost + t.BuyerProvision + t.FundProvision);
-            buyer.AddShares(t.ShareName, t.NoOfSharesSold);
-            Utils.ReplaceElement(investorDepots, buyer, "Email");
+            if (Utils.FindElement(fundDepots, t.BuyerId, "FundID") != null)
+            {
+                var buyer = Utils.FindElement(fundDepots, t.BuyerId, "FundID");
+                buyer.FundBank -= (t.TotalCost + t.BuyerProvision);
+                buyer.AddShares(t.ShareName, t.NoOfSharesSold);
+                Utils.ReplaceElement(fundDepots, buyer, "FundID");
+            }
+            else
+            {
+                var buyer = Utils.FindElement(investorDepots, t.BuyerId, "Email");
+                buyer.Budget -= (t.TotalCost + t.BuyerProvision + t.FundProvision);
+                buyer.AddShares(t.ShareName, t.NoOfSharesSold);
+                Utils.ReplaceElement(investorDepots, buyer, "Email");
+            }
 
             InvestorDepot sdepot = Utils.FindElement(investorDepots, t.SellerId, "Email");
             if (sdepot != null)
