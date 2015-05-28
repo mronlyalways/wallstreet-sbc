@@ -31,6 +31,8 @@ namespace SharedFeatures.Model
 
         public bool PrioritizedBuyingOrder { get; set; }
 
+        public bool IsFund { get; set; }
+
         public double TotalCost
         {
             get
@@ -62,6 +64,21 @@ namespace SharedFeatures.Model
                     prioritizationMultiplier = 2;
                 }
                 return TotalCost * 0.03 * prioritizationMultiplier;
+            }
+        }
+
+        public double FundProvision
+        {
+            get
+            {
+                if (IsFund)
+                {
+                    return TotalCost * 0.02;
+                }
+                else
+                {
+                    return 0.0;
+                }
             }
         }
     }

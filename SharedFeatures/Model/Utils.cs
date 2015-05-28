@@ -53,5 +53,33 @@ namespace SharedFeatures.Model
                 }
             }
         }
+
+        public static FundDepot FindFundDepot(XcoList<FundDepot> list, String key)
+        {
+            FundDepot result = null;
+            for (int i = 0; i < list.Count; i++)
+            {
+                FundDepot d = list[i, true];
+                if (d.FundID == key)
+                {
+                    result = d;
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        public static void ReplaceFundDepot(XcoList<FundDepot> list, FundDepot depot)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                FundDepot d = list[i, true];
+                if (d.FundID == depot.FundID)
+                {
+                    list[i] = depot;
+                }
+            }
+        }
     }
 }

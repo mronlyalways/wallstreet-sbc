@@ -415,8 +415,6 @@ namespace Broker
 
             var noOfSharesSold = Math.Min(o1.NoOfOpenShares, o2.NoOfOpenShares);
 
-
-
             Transaction t = new Transaction()
             {
                 TransactionId = o1.Id + o2.Id,
@@ -429,7 +427,8 @@ namespace Broker
                 NoOfSharesSold = noOfSharesSold,
                 PricePerShare = Utils.FindPricePerShare(stockInformation, o1.ShareName),
                 PrioritizedBuyingOrder = purchase.Prioritize,
-                PrioritizedSellingOrder = sell.Prioritize
+                PrioritizedSellingOrder = sell.Prioritize,
+                IsFund = IsFund(o1) | IsFund(o2)
             };
 
             return t;
@@ -437,7 +436,7 @@ namespace Broker
 
         private static bool IsAffordable(Transaction t)
         {
-            return (t.TotalCost + t.BuyerProvision) <= investorDepots[t.BuyerId].Budget; 
+            return (t.TotalCost + t.BuyerProvision + t.FundProvision) <= investorDepots[t.BuyerId].Budget; 
         }
 
         private static bool HasEnoughShares(Transaction t)
@@ -458,8 +457,28 @@ namespace Broker
                     enoughShares = true;
                 }
             }
+            else if (fundDepots.ContainsKey(t.SellerId))
+            {
+                enoughShares = true;
+            }
 
             return enoughShares;
+        }
+
+        public static bool IsFund(Order order)
+        {
+                bool isfund = false;
+
+                for (int i = 0; i < stockInformation.Count; i++)
+                {
+                    ShareInformation s = stockInformation[i];
+                    if (s.FirmName.Equals(order.ShareName))
+                    {
+                        isfund = s.isFund;
+                    }
+                }
+
+                return isfund;
         }
 
         private static void Punish(Order o1, int index1, Order o2, int index2, Transaction t)
@@ -565,7 +584,7 @@ namespace Broker
             match.Status = (match.NoOfOpenShares == 0) ? Order.OrderStatus.DONE : Order.OrderStatus.PARTIAL;
 
             var buyer = investorDepots[t.BuyerId];
-            buyer.Budget -= (t.TotalCost + t.BuyerProvision);
+            buyer.Budget -= (t.TotalCost + t.BuyerProvision + t.FundProvision);
             buyer.AddShares(t.ShareName, t.NoOfSharesSold);
             investorDepots[t.BuyerId] = buyer;
 
@@ -573,7 +592,7 @@ namespace Broker
             {
                 var seller = investorDepots[t.SellerId];
                 seller.RemoveShares(t.ShareName, t.NoOfSharesSold);
-                seller.Budget += (t.TotalCost - t.SellerProvision);
+                seller.Budget += (t.TotalCost - t.SellerProvision - t.FundProvision);
                 investorDepots[t.SellerId] = seller;
             }
             else if (firmDepots.ContainsKey(t.SellerId))
@@ -581,6 +600,19 @@ namespace Broker
                 var seller = firmDepots[t.SellerId];
                 seller.OwnedShares -= t.NoOfSharesSold;
                 firmDepots[t.SellerId] = seller;
+            }
+            else if (fundDepots.ContainsKey(t.SellerId))
+            {
+                var seller = fundDepots[t.SellerId];
+                seller.FundAssets += (t.TotalCost - t.SellerProvision);
+                fundDepots[t.SellerId] = seller;
+            }
+
+            if (t.IsFund)
+            {
+                var seller = fundDepots[t.SellerId];
+                seller.FundAssets += t.FundProvision * 2;
+                fundDepots[t.SellerId] = seller;
             }
         }
     }
