@@ -88,7 +88,7 @@ namespace Fondsmanager.ViewModel
                     value += s.Value;
                 }
 
-                value += depot.FundAssets;
+                value += depot.FundBank;
 
                 return value;
             }

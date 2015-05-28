@@ -26,7 +26,7 @@ namespace SharedFeatures.Model
             set;
         }
 
-        public double FundAssets
+        public double FundBank
         {
             get;
             set;
@@ -50,7 +50,7 @@ namespace SharedFeatures.Model
 
         public override string ToString()
         {
-            String output = "Fund assets: " + this.FundAssets + "; Shares: ";
+            String output = "Fund assets: " + this.FundBank + "; Shares: ";
             if (this.Shares != null)
             {
                 foreach (string key in this.Shares.Keys)

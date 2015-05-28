@@ -228,7 +228,7 @@ namespace Broker
                             {
                                 FirmName = depot.FundID,
                                 NoOfShares = depot.FundShares,
-                                PricePerShare = depot.FundAssets / depot.FundShares,
+                                PricePerShare = depot.FundBank / depot.FundShares,
                                 isFund = true
                             };
                             stockInformation.Add(s);
@@ -345,6 +345,7 @@ namespace Broker
                     catch (XcoException e)
                     {
                         Console.WriteLine(e.Message);
+                        Console.WriteLine(e.StackTrace);
                         tx.Rollback();
                         orderQueue.Enqueue(o);
                     }
@@ -604,7 +605,7 @@ namespace Broker
             else if (Utils.FindFundDepot(fundDepots, t.SellerId) != null)
             {
                 var seller = Utils.FindFundDepot(fundDepots, t.SellerId);
-                seller.FundAssets += (t.TotalCost - t.SellerProvision);
+                seller.FundBank += (t.TotalCost - t.SellerProvision);
                 Utils.ReplaceFundDepot(fundDepots, seller);
             }
 
@@ -620,7 +621,7 @@ namespace Broker
                 {
                     multiplier++;
                 }
-                depot.FundAssets += t.FundProvision * multiplier;
+                depot.FundBank += t.FundProvision * multiplier;
                 Utils.ReplaceFundDepot(fundDepots, depot);
             }
         }

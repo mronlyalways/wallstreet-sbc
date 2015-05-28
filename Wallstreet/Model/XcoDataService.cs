@@ -216,7 +216,7 @@ namespace Wallstreet.Model
             {
                 if (!investorDepots.ContainsKey(reg.FundID) && !firmDepots.ContainsKey(reg.FundID))
                 {
-                    depot = new FundDepot() { FundID = reg.FundID, FundShares = reg.FundShares, FundAssets = reg.FundAssets };
+                    depot = new FundDepot() { FundID = reg.FundID, FundShares = reg.FundShares, FundBank = reg.FundAssets };
                     fundDepots.Add(depot);
                     fundDepotQueue.Enqueue(depot);
                 }

@@ -81,5 +81,34 @@ namespace SharedFeatures.Model
                 }
             }
         }
+
+        public static InvestorDepot FindInvestorDepot(XcoList<InvestorDepot> list, String key)
+        {
+            InvestorDepot result = null;
+            for (int i = 0; i < list.Count; i++)
+            {
+                InvestorDepot d = list[i, true];
+                if (d.Email == key)
+                {
+                    result = d;
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        public static void ReplaceInvestorDepot(XcoList<InvestorDepot> list, InvestorDepot depot)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                InvestorDepot d = list[i, true];
+                if (d.Email == depot.Email)
+                {
+                    list[i] = depot;
+                }
+            }
+        }
+
     }
 }
