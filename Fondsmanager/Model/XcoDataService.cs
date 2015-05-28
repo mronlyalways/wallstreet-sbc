@@ -177,7 +177,7 @@ namespace Fondsmanager.Model
             {
                 LoadMarketInformation();
             }
-            return orderCache.Where(x => x.InvestorId == depot.FundID && x.NoOfOpenShares > 0);
+            return orderCache.Where(x => x.InvestorId == depot.FundID && x.NoOfOpenShares > 0 && x.ShareName != depot.FundID);
         }
 
         public void AddNewMarketInformationAvailableCallback(Action<ShareInformation> callback)
