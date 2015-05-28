@@ -24,7 +24,7 @@ namespace Broker
         private static XcoQueue<Request> requestsQ;
         private static XcoList<Order> orders;
         private static XcoQueue<Order> orderQueue;
-        private static XcoDictionary<string, InvestorDepot> investorDepots;
+        private static XcoList<InvestorDepot> investorDepots;
         private static XcoDictionary<string, FirmDepot> firmDepots;
         private static XcoQueue<FundDepot> fundDepotQueue;
         private static XcoList<FundDepot> fundDepots;
@@ -92,7 +92,7 @@ namespace Broker
                 transactions = space.Get<XcoList<Transaction>>("Transactions", spaceServer);
                 orders = space.Get<XcoList<Order>>("Orders", spaceServer);
                 orderQueue = space.Get<XcoQueue<Order>>("OrderQueue", spaceServer);
-                investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServer);
+                investorDepots = space.Get<XcoList<InvestorDepot>>("InvestorDepots", spaceServer);
                 firmDepots = space.Get<XcoDictionary<string, FirmDepot>>("FirmDepots", spaceServer);
                 fundDepots = space.Get<XcoList<FundDepot>>("FundDepots", spaceServer);
                 fundDepotQueue = space.Get<XcoQueue<FundDepot>>("FundDepotQueue", spaceServer);
@@ -437,16 +437,17 @@ namespace Broker
 
         private static bool IsAffordable(Transaction t)
         {
-            return (t.TotalCost + t.BuyerProvision + t.FundProvision) <= investorDepots[t.BuyerId].Budget; 
+            return (t.TotalCost + t.BuyerProvision + t.FundProvision) <= Utils.FindInvestorDepot(investorDepots, t.BuyerId).Budget; 
         }
 
         private static bool HasEnoughShares(Transaction t)
         {
             bool enoughShares = false;
 
-            if (investorDepots.ContainsKey(t.SellerId))
+            InvestorDepot idepot = Utils.FindInvestorDepot(investorDepots, t.SellerId);
+            if (idepot != null)
             {
-                if (investorDepots[t.SellerId].Shares[t.ShareName] >= t.NoOfSharesSold)
+                if (idepot.Shares[t.ShareName] >= t.NoOfSharesSold)
                 {
                     enoughShares = true;
                 }
@@ -584,17 +585,18 @@ namespace Broker
             o.Status = (o.NoOfOpenShares == 0) ? Order.OrderStatus.DONE : Order.OrderStatus.PARTIAL;
             match.Status = (match.NoOfOpenShares == 0) ? Order.OrderStatus.DONE : Order.OrderStatus.PARTIAL;
 
-            var buyer = investorDepots[t.BuyerId];
+            var buyer = Utils.FindInvestorDepot(investorDepots, t.BuyerId);
             buyer.Budget -= (t.TotalCost + t.BuyerProvision + t.FundProvision);
             buyer.AddShares(t.ShareName, t.NoOfSharesSold);
-            investorDepots[t.BuyerId] = buyer;
+            Utils.ReplaceInvestorDepot(investorDepots, buyer);
 
-            if (investorDepots.ContainsKey(t.SellerId))
+            InvestorDepot sdepot = Utils.FindInvestorDepot(investorDepots, t.SellerId);
+            if (sdepot != null)
             {
-                var seller = investorDepots[t.SellerId];
+                var seller = sdepot;
                 seller.RemoveShares(t.ShareName, t.NoOfSharesSold);
                 seller.Budget += (t.TotalCost - t.SellerProvision - t.FundProvision);
-                investorDepots[t.SellerId] = seller;
+                Utils.ReplaceInvestorDepot(investorDepots, seller);
             }
             else if (firmDepots.ContainsKey(t.SellerId))
             {

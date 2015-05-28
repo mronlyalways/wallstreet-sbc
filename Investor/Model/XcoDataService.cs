@@ -18,7 +18,7 @@ namespace Investor.Model
         private readonly Uri spaceServerUri = new Uri("xco://" + Environment.MachineName + ":" + 9000);
         private XcoSpace space;
         private XcoQueue<Registration> registrations;
-        private XcoDictionary<string, InvestorDepot> investorDepots;
+        private XcoList<InvestorDepot> investorDepots;
         private XcoList<ShareInformation> stockInformation;
         private XcoList<Order> orders;
         private XcoQueue<Order> orderQueue;
@@ -40,7 +40,7 @@ namespace Investor.Model
             orderCache = new List<Order>();
             depot = null;
             registrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", spaceServerUri);
-            investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServerUri);
+            investorDepots = space.Get<XcoList<InvestorDepot>>("InvestorDepots", spaceServerUri);
             investorDepots.AddNotificationForEntryAdd(OnInvestorDepotAdded);
             stockInformation = space.Get<XcoList<ShareInformation>>("StockInformation", spaceServerUri);
             stockInformation.AddNotificationForEntryAdd(OnShareInformationAdded);
@@ -182,9 +182,9 @@ namespace Investor.Model
             investorDepotCallbacks.Remove(callback);
         }
 
-        private void OnInvestorDepotAdded(XcoDictionary<string, InvestorDepot> source, string key, InvestorDepot d)
+        private void OnInvestorDepotAdded(XcoList<InvestorDepot> source, InvestorDepot d, int k)
         {
-            if (this.registration != null && this.registration.Email == key)
+            if (this.registration != null && this.registration.Email == d.Email)
             {
                 depot = d;
                 ExecuteOnGUIThread(investorDepotCallbacks, d);

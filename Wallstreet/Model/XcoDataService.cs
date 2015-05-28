@@ -17,7 +17,7 @@ namespace Wallstreet.Model
         private XcoSpace space;
         private XcoList<ShareInformation> stockInformation;
         private XcoQueue<Registration> investorDepotRegistrations;
-        private XcoDictionary<string, InvestorDepot> investorDepots;
+        private XcoList<InvestorDepot> investorDepots;
         private XcoQueue<FundRegistration> fundDepotRegistrations;
         private XcoList<FundDepot> fundDepots;
         private XcoDictionary<string, FirmDepot> firmDepots;
@@ -40,7 +40,7 @@ namespace Wallstreet.Model
             stockInformation.AddNotificationForEntryAdd(OnShareInformationEntryAdded);
             investorDepotRegistrations = space.Get<XcoQueue<Registration>>("InvestorRegistrations", spaceServerUri);
             investorDepotRegistrations.AddNotificationForEntryEnqueued(OnRegistrationEntryAdded);
-            investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServerUri);
+            investorDepots = space.Get<XcoList<InvestorDepot>>("InvestorDepots", spaceServerUri);
             fundDepotRegistrations = space.Get<XcoQueue<FundRegistration>>("FundRegistrations", spaceServerUri);
             fundDepotRegistrations.AddNotificationForEntryEnqueued(OnFundRegistrationEntryAdded);
             fundDepots = space.Get<XcoList<FundDepot>>("FundDepots", spaceServerUri);
@@ -187,25 +187,17 @@ namespace Wallstreet.Model
 
         private void HandleRegistration(Registration reg)
         {
-            InvestorDepot depot;
-            if (investorDepots.ContainsKey(reg.Email))
+            InvestorDepot depot = Utils.FindInvestorDepot(investorDepots, reg.Email);
+            if (depot == null)
             {
-                depot = investorDepots[reg.Email];
+                depot = new InvestorDepot() { Email = reg.Email, Budget = reg.Budget };
+                investorDepots.Add(depot);
             }
-            else
-            {
-                depot = new InvestorDepot() { Email = reg.Email };
-            }
+            else { 
 
-            depot.Budget += reg.Budget;
+                depot.Budget += reg.Budget;
 
-            if (investorDepots.ContainsKey(reg.Email))
-            {
-                investorDepots[reg.Email] = depot;
-            }
-            else
-            {
-                investorDepots.Add(reg.Email, depot);
+                Utils.ReplaceInvestorDepot(investorDepots, depot);
             }
         }
 
@@ -214,7 +206,7 @@ namespace Wallstreet.Model
             FundDepot depot = Utils.FindFundDepot(fundDepots, reg.FundID);
             if (depot == null)
             {
-                if (!investorDepots.ContainsKey(reg.FundID) && !firmDepots.ContainsKey(reg.FundID))
+                if (Utils.FindInvestorDepot(investorDepots, reg.FundID) == null && !firmDepots.ContainsKey(reg.FundID))
                 {
                     depot = new FundDepot() { FundID = reg.FundID, FundShares = reg.FundShares, FundBank = reg.FundAssets };
                     fundDepots.Add(depot);
