@@ -53,9 +53,9 @@ namespace SpaceServer
                 space.Add(investorDepots, "InvestorDepots");
                 investorDepots.AddNotificationForEntryAdd((s, k, r) => Console.WriteLine("New investor depot entry for Email address {0} (Budget: {1}).", k, r.Budget));
 
-                var fundDepots = new XcoDictionary<string, FundDepot>();
+                var fundDepots = new XcoList<FundDepot>();
                 space.Add(fundDepots, "FundDepots");
-                fundDepots.AddNotificationForEntryAdd((s, k, r) => Console.WriteLine("New fund depot entry for fund id {0} (fund assets: {1}, fund shares: {2}", k, r.FundAssets, r.FundShares));
+                fundDepots.AddNotificationForEntryAdd((s, r, k) => Console.WriteLine("New fund depot entry for fund id {0} (fund assets: {1}, fund shares: {2}", r.FundID, r.FundAssets, r.FundShares));
 
                 var fundDepotQueue = new XcoQueue<FundDepot>();
                 space.Add(fundDepotQueue, "FundDepotQueue");

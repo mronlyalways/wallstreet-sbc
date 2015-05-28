@@ -18,7 +18,7 @@ namespace Fondsmanager.Model
         private readonly Uri spaceServerUri = new Uri("xco://" + Environment.MachineName + ":" + 9000);
         private XcoSpace space;
         private XcoQueue<FundRegistration> registrations;
-        private XcoDictionary<string, FundDepot> fundDepots;
+        private XcoList<FundDepot> fundDepots;
         private XcoList<ShareInformation> stockInformation;
         private XcoList<Order> orders;
         private XcoQueue<Order> orderQueue;
@@ -40,7 +40,7 @@ namespace Fondsmanager.Model
             orderCache = new List<Order>();
             depot = null;
             registrations = space.Get<XcoQueue<FundRegistration>>("FundRegistrations", spaceServerUri);
-            fundDepots = space.Get<XcoDictionary<string, FundDepot>>("FundDepots", spaceServerUri);
+            fundDepots = space.Get<XcoList<FundDepot>>("FundDepots", spaceServerUri);
             fundDepots.AddNotificationForEntryAdd(OnFundDepotAdded);
             stockInformation = space.Get<XcoList<ShareInformation>>("StockInformation", spaceServerUri);
             stockInformation.AddNotificationForEntryAdd(OnShareInformationAdded);
@@ -161,10 +161,9 @@ namespace Fondsmanager.Model
             {
                 bool isfund = false;
 
-                foreach (String fondid in fundDepots.Keys)
-                {
-                    isfund |= fondid.Equals(share.FirmName);
-                }
+                FundDepot d = Utils.FindFundDepot(fundDepots, share.FirmName);
+                isfund = (d != null);
+
 
                 tx.Commit();
                 return isfund;
@@ -201,9 +200,9 @@ namespace Fondsmanager.Model
             fundDepotCallbacks.Remove(callback);
         }
 
-        private void OnFundDepotAdded(XcoDictionary<string, FundDepot> source, string key, FundDepot d)
+        private void OnFundDepotAdded(XcoList<FundDepot> source, FundDepot d, int k)
         {
-            if (this.registration != null && this.registration.FundID == key)
+            if (this.registration != null && this.registration.FundID == d.FundID)
             {
                 depot = d;
                 ExecuteOnGUIThread(fundDepotCallbacks, d);

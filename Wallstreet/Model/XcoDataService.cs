@@ -19,7 +19,7 @@ namespace Wallstreet.Model
         private XcoQueue<Registration> investorDepotRegistrations;
         private XcoDictionary<string, InvestorDepot> investorDepots;
         private XcoQueue<FundRegistration> fundDepotRegistrations;
-        private XcoDictionary<string, FundDepot> fundDepots;
+        private XcoList<FundDepot> fundDepots;
         private XcoDictionary<string, FirmDepot> firmDepots;
         private XcoQueue<FundDepot> fundDepotQueue;
         private XcoList<Order> orders;
@@ -43,7 +43,7 @@ namespace Wallstreet.Model
             investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServerUri);
             fundDepotRegistrations = space.Get<XcoQueue<FundRegistration>>("FundRegistrations", spaceServerUri);
             fundDepotRegistrations.AddNotificationForEntryEnqueued(OnFundRegistrationEntryAdded);
-            fundDepots = space.Get<XcoDictionary<string, FundDepot>>("FundDepots", spaceServerUri);
+            fundDepots = space.Get<XcoList<FundDepot>>("FundDepots", spaceServerUri);
             fundDepotQueue = space.Get<XcoQueue<FundDepot>>("FundDepotQueue", spaceServerUri);
             firmDepots = space.Get<XcoDictionary<string, FirmDepot>>("FirmDepots", spaceServerUri);
             orders = space.Get<XcoList<Order>>("Orders", spaceServerUri);
@@ -211,17 +211,13 @@ namespace Wallstreet.Model
 
         private void HandleFundRegistration(FundRegistration reg)
         {
-            FundDepot depot;
-            if (fundDepots.ContainsKey(reg.FundID))
-            {
-                depot = fundDepots[reg.FundID];
-            }
-            else
+            FundDepot depot = Utils.FindFundDepot(fundDepots, reg.FundID);
+            if (depot == null)
             {
                 if (!investorDepots.ContainsKey(reg.FundID) && !firmDepots.ContainsKey(reg.FundID))
                 {
                     depot = new FundDepot() { FundID = reg.FundID, FundShares = reg.FundShares, FundAssets = reg.FundAssets };
-                    fundDepots.Add(reg.FundID, depot);
+                    fundDepots.Add(depot);
                     fundDepotQueue.Enqueue(depot);
                 }
             }

@@ -27,7 +27,7 @@ namespace Broker
         private static XcoDictionary<string, InvestorDepot> investorDepots;
         private static XcoDictionary<string, FirmDepot> firmDepots;
         private static XcoQueue<FundDepot> fundDepotQueue;
-        private static XcoDictionary<string, FundDepot> fundDepots;
+        private static XcoList<FundDepot> fundDepots;
         private static XcoList<Transaction> transactions;
         private static XcoList<ShareInformation> stockInformation;
         private static XcoQueue<string> stockInformationUpdates;
@@ -94,7 +94,7 @@ namespace Broker
                 orderQueue = space.Get<XcoQueue<Order>>("OrderQueue", spaceServer);
                 investorDepots = space.Get<XcoDictionary<string, InvestorDepot>>("InvestorDepots", spaceServer);
                 firmDepots = space.Get<XcoDictionary<string, FirmDepot>>("FirmDepots", spaceServer);
-                fundDepots = space.Get<XcoDictionary<string, FundDepot>>("FundDepots", spaceServer);
+                fundDepots = space.Get<XcoList<FundDepot>>("FundDepots", spaceServer);
                 fundDepotQueue = space.Get<XcoQueue<FundDepot>>("FundDepotQueue", spaceServer);
                 fundDepotQueue.AddNotificationForEntryEnqueued(OnFundDepotAddedToQueue);
                 stockInformation = space.Get<XcoList<ShareInformation>>("StockInformation", spaceServer);
@@ -457,7 +457,7 @@ namespace Broker
                     enoughShares = true;
                 }
             }
-            else if (fundDepots.ContainsKey(t.SellerId))
+            else if (Utils.FindFundDepot(fundDepots, t.SellerId) != null)
             {
                 enoughShares = true;
             }
@@ -601,18 +601,27 @@ namespace Broker
                 seller.OwnedShares -= t.NoOfSharesSold;
                 firmDepots[t.SellerId] = seller;
             }
-            else if (fundDepots.ContainsKey(t.SellerId))
+            else if (Utils.FindFundDepot(fundDepots, t.SellerId) != null)
             {
-                var seller = fundDepots[t.SellerId];
+                var seller = Utils.FindFundDepot(fundDepots, t.SellerId);
                 seller.FundAssets += (t.TotalCost - t.SellerProvision);
-                fundDepots[t.SellerId] = seller;
+                Utils.ReplaceFundDepot(fundDepots, seller);
             }
 
             if (t.IsFund)
             {
-                var seller = fundDepots[t.SellerId];
-                seller.FundAssets += t.FundProvision * 2;
-                fundDepots[t.SellerId] = seller;
+                var depot = Utils.FindFundDepot(fundDepots, t.ShareName);
+                int multiplier = 0;
+                if (t.SellerId != depot.FundID)
+                {
+                    multiplier++;
+                }
+                if (t.BuyerId != depot.FundID)
+                {
+                    multiplier++;
+                }
+                depot.FundAssets += t.FundProvision * multiplier;
+                Utils.ReplaceFundDepot(fundDepots, depot);
             }
         }
     }
