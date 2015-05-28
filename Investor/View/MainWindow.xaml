@@ -98,7 +98,7 @@
                             <Label Content="Prioritize:"/>
                             <CheckBox IsChecked="{Binding PrioritizeBuying}" Margin="10,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>                        
-                        <Button Content="Place Buying Order" Command="{Binding PlaceBuyingOrderCommand}" />
+                        <Button MinHeight="40" Content="Place Buying Order" Command="{Binding PlaceBuyingOrderCommand}" />
                     </StackPanel>
                     <StackPanel Grid.Column="1" Grid.Row="2">
                         <Label Content="Share to be sold:" />
@@ -111,7 +111,7 @@
                             <Label Content="Prioritize:"/>
                             <CheckBox IsChecked="{Binding PrioritizeSelling}" Margin="10,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
-                        <Button Content="Place Selling Order" Command="{Binding PlaceSellingOrderCommand}" />
+                        <Button MinHeight="40" Content="Place Selling Order" Command="{Binding PlaceSellingOrderCommand}" />
                     </StackPanel>
                 </Grid>
             </TabItem>
