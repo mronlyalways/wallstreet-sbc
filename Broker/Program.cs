@@ -161,14 +161,14 @@ namespace Broker
                                 {
                                     depot.OwnedShares += request.Shares;
                                     firmDepots[request.FirmName] = depot;
-                                    var info = Utils.FindShare(stockInformation, request.FirmName);
+                                    var info = Utils.FindElement(stockInformation, request.FirmName, "FirmName");
                                     ShareInformation update = new ShareInformation()
                                     {
                                         FirmName = request.FirmName,
                                         NoOfShares = info.NoOfShares,
                                         PricePerShare = info.PricePerShare
                                     };
-                                    Utils.ReplaceShare(stockInformation, update);
+                                    Utils.ReplaceElement(stockInformation, update, "FirmName");
                                     Console.WriteLine("Add {0} shares to existing account \"{1}\"", request.Shares, request.FirmName);
                                 }
                                 else
@@ -437,14 +437,14 @@ namespace Broker
 
         private static bool IsAffordable(Transaction t)
         {
-            return (t.TotalCost + t.BuyerProvision + t.FundProvision) <= Utils.FindInvestorDepot(investorDepots, t.BuyerId).Budget; 
+            return (t.TotalCost + t.BuyerProvision + t.FundProvision) <= Utils.FindElement(investorDepots, t.BuyerId, "Email").Budget; 
         }
 
         private static bool HasEnoughShares(Transaction t)
         {
             bool enoughShares = false;
 
-            InvestorDepot idepot = Utils.FindInvestorDepot(investorDepots, t.SellerId);
+            InvestorDepot idepot = Utils.FindElement(investorDepots, t.SellerId, "Email");
             if (idepot != null)
             {
                 if (idepot.Shares[t.ShareName] >= t.NoOfSharesSold)
@@ -459,7 +459,7 @@ namespace Broker
                     enoughShares = true;
                 }
             }
-            else if (Utils.FindFundDepot(fundDepots, t.SellerId) != null)
+            else if (Utils.FindElement(fundDepots, t.SellerId, "FundID") != null)
             {
                 enoughShares = true;
             }
@@ -585,18 +585,18 @@ namespace Broker
             o.Status = (o.NoOfOpenShares == 0) ? Order.OrderStatus.DONE : Order.OrderStatus.PARTIAL;
             match.Status = (match.NoOfOpenShares == 0) ? Order.OrderStatus.DONE : Order.OrderStatus.PARTIAL;
 
-            var buyer = Utils.FindInvestorDepot(investorDepots, t.BuyerId);
+            var buyer = Utils.FindElement(investorDepots, t.BuyerId, "Email");
             buyer.Budget -= (t.TotalCost + t.BuyerProvision + t.FundProvision);
             buyer.AddShares(t.ShareName, t.NoOfSharesSold);
-            Utils.ReplaceInvestorDepot(investorDepots, buyer);
+            Utils.ReplaceElement(investorDepots, buyer, "Email");
 
-            InvestorDepot sdepot = Utils.FindInvestorDepot(investorDepots, t.SellerId);
+            InvestorDepot sdepot = Utils.FindElement(investorDepots, t.SellerId, "Email");
             if (sdepot != null)
             {
                 var seller = sdepot;
                 seller.RemoveShares(t.ShareName, t.NoOfSharesSold);
                 seller.Budget += (t.TotalCost - t.SellerProvision - t.FundProvision);
-                Utils.ReplaceInvestorDepot(investorDepots, seller);
+                Utils.ReplaceElement(investorDepots, seller, "Email");
             }
             else if (firmDepots.ContainsKey(t.SellerId))
             {
@@ -604,16 +604,16 @@ namespace Broker
                 seller.OwnedShares -= t.NoOfSharesSold;
                 firmDepots[t.SellerId] = seller;
             }
-            else if (Utils.FindFundDepot(fundDepots, t.SellerId) != null)
+            else if (Utils.FindElement(fundDepots, t.SellerId, "FundID") != null)
             {
-                var seller = Utils.FindFundDepot(fundDepots, t.SellerId);
+                var seller = Utils.FindElement(fundDepots, t.SellerId, "FundID");
                 seller.FundBank += (t.TotalCost - t.SellerProvision);
-                Utils.ReplaceFundDepot(fundDepots, seller);
+                Utils.ReplaceElement(fundDepots, seller, "FundID");
             }
 
             if (t.IsFund)
             {
-                var depot = Utils.FindFundDepot(fundDepots, t.ShareName);
+                var depot = Utils.FindElement(fundDepots, t.ShareName, "FundID");
                 int multiplier = 0;
                 if (t.SellerId != depot.FundID)
                 {
@@ -624,7 +624,7 @@ namespace Broker
                     multiplier++;
                 }
                 depot.FundBank += t.FundProvision * multiplier;
-                Utils.ReplaceFundDepot(fundDepots, depot);
+                Utils.ReplaceElement(fundDepots, depot, "FundID");
             }
         }
     }

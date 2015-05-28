@@ -187,7 +187,7 @@ namespace Wallstreet.Model
 
         private void HandleRegistration(Registration reg)
         {
-            InvestorDepot depot = Utils.FindInvestorDepot(investorDepots, reg.Email);
+            InvestorDepot depot = Utils.FindElement(investorDepots, reg.Email, "Email");
             if (depot == null)
             {
                 depot = new InvestorDepot() { Email = reg.Email, Budget = reg.Budget };
@@ -197,16 +197,16 @@ namespace Wallstreet.Model
 
                 depot.Budget += reg.Budget;
 
-                Utils.ReplaceInvestorDepot(investorDepots, depot);
+                Utils.ReplaceElement(investorDepots, depot, "Email");
             }
         }
 
         private void HandleFundRegistration(FundRegistration reg)
         {
-            FundDepot depot = Utils.FindFundDepot(fundDepots, reg.FundID);
+            FundDepot depot = Utils.FindElement(fundDepots, reg.FundID, "FundID");
             if (depot == null)
             {
-                if (Utils.FindInvestorDepot(investorDepots, reg.FundID) == null && !firmDepots.ContainsKey(reg.FundID))
+                if (Utils.FindElement(investorDepots, reg.FundID, "Email") == null && !firmDepots.ContainsKey(reg.FundID))
                 {
                     depot = new FundDepot() { FundID = reg.FundID, FundShares = reg.FundShares, FundBank = reg.FundAssets };
                     fundDepots.Add(depot);

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using XcoSpaces;
 using XcoSpaces.Collections;
+using System.Reflection;
 
 namespace SharedFeatures.Model
 {
@@ -26,86 +27,34 @@ namespace SharedFeatures.Model
             return result;
         }
 
-        public static ShareInformation FindShare(XcoList<ShareInformation> list, string firmName)
+        public static T FindElement<T>(XcoList<T> list, String key, String propertyName)
         {
-            ShareInformation result = null;
+            T result = default(T);
             for (int i = 0; i < list.Count; i++)
             {
-                ShareInformation s = list[i,true];
-                if (s.FirmName == firmName)
-                {
-                    result = s;
-                    break;
-                }
-            }
-            return result;
-        }
+                    T d = list[i, true];
+                    var property = d.GetType().GetProperty(propertyName).GetValue(d);
 
-        public static void ReplaceShare(XcoList<ShareInformation> list, ShareInformation share)
-        {
-            for (int i = 0; i < list.Count; i++)
-            {
-                ShareInformation s = list[i,true];
-                if (s.FirmName == share.FirmName)
-                {
-                    list[i] = share;
-                    break;
-                }
-            }
-        }
-
-        public static FundDepot FindFundDepot(XcoList<FundDepot> list, String key)
-        {
-            FundDepot result = null;
-            for (int i = 0; i < list.Count; i++)
-            {
-                FundDepot d = list[i, true];
-                if (d.FundID == key)
-                {
-                    result = d;
-                    break;
-                }
+                    if (property.Equals(key))
+                    {
+                        result = d;
+                        break;
+                    }
             }
 
             return result;
         }
 
-        public static void ReplaceFundDepot(XcoList<FundDepot> list, FundDepot depot)
+        public static void ReplaceElement<T>(XcoList<T> list, T element, String propertyName)
         {
             for (int i = 0; i < list.Count; i++)
             {
-                FundDepot d = list[i, true];
-                if (d.FundID == depot.FundID)
+                T e = list[i, true];
+                var property1 = e.GetType().GetProperty(propertyName).GetValue(e);
+                var property2 = element.GetType().GetProperty(propertyName).GetValue(element);
+                if (property1.Equals(property2))
                 {
-                    list[i] = depot;
-                }
-            }
-        }
-
-        public static InvestorDepot FindInvestorDepot(XcoList<InvestorDepot> list, String key)
-        {
-            InvestorDepot result = null;
-            for (int i = 0; i < list.Count; i++)
-            {
-                InvestorDepot d = list[i, true];
-                if (d.Email == key)
-                {
-                    result = d;
-                    break;
-                }
-            }
-
-            return result;
-        }
-
-        public static void ReplaceInvestorDepot(XcoList<InvestorDepot> list, InvestorDepot depot)
-        {
-            for (int i = 0; i < list.Count; i++)
-            {
-                InvestorDepot d = list[i, true];
-                if (d.Email == depot.Email)
-                {
-                    list[i] = depot;
+                    list[i] = element;
                 }
             }
         }

@@ -161,7 +161,7 @@ namespace Fondsmanager.Model
             {
                 bool isfund = false;
 
-                FundDepot d = Utils.FindFundDepot(fundDepots, share.FirmName);
+                FundDepot d = Utils.FindElement(fundDepots, share.FirmName, "FundID");
                 isfund = (d != null);
 
 
