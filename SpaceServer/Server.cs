@@ -20,8 +20,9 @@ namespace SpaceServer
             using (XcoKernel kernel = new XcoKernel())
             using (XcoSpace space = new XcoSpace(9000))
             {
-
-                kernel.Start(9001);
+                Console.WriteLine("Use the following URL to connect to this space: " + space.Address);
+                
+                kernel.Start(space.Address.Port + 1);
                 ContainerReference cref = kernel.CreateNamedContainer(null, "BrokerIdContainer", 1, new LindaSelector());
                 kernel.Write(cref, null, 0, new Entry(new XcoSpaces.Kernel.Selectors.Tuple(new TupleValue<int>(0))));
                 

@@ -18,8 +18,7 @@ namespace Broker
     public class Program
     {
         private static int brokerId;
-        private static readonly Uri spaceServer = new Uri("xco://" + Environment.MachineName + ":" + 9000);
-        private static readonly string kernelServer = Environment.MachineName + ":" + 9001;
+        private static Uri spaceServer;
         private static XcoSpace space;
         private static XcoQueue<Request> requestsQ;
         private static XcoList<Order> orders;
@@ -79,7 +78,7 @@ namespace Broker
         #endregion
 
 
-        static void Main(string[] args)
+        static void Main(string[] args) 
         {
 
             _handler += new EventHandler(Handler);
@@ -87,6 +86,8 @@ namespace Broker
 
             try
             {
+                Console.Write("Please enter a URI of a space server: ");
+                spaceServer = new Uri(Console.ReadLine());
                 QueryBrokerId();
                 space = new XcoSpace(0);
                 transactions = space.Get<XcoList<Transaction>>("Transactions", spaceServer);
@@ -119,7 +120,8 @@ namespace Broker
             using(XcoKernel kernel = new XcoKernel()) {
                 kernel.Start(0);
 
-                ContainerReference cref = kernel.GetNamedContainer(kernelServer, "BrokerIdContainer");
+                Uri space2 = new Uri(spaceServer.Host + ":" + (spaceServer.Port + 1));
+                ContainerReference cref = kernel.GetNamedContainer(space2.ToString(), "BrokerIdContainer");
 
                 List<IEntry> entries = kernel.Take(cref, null, System.Threading.Timeout.Infinite, new LindaSelector(1, null));
 
