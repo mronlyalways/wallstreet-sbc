@@ -14,6 +14,10 @@ namespace Firm
     {
         static void Main(string[] args)
         {
+
+            Console.Write("Please enter a URI of a space server: ");
+            Uri spaceServer = new Uri(Console.ReadLine());
+
             using (XcoSpace space = new XcoSpace(0))
             {
                 string name;
@@ -24,7 +28,7 @@ namespace Firm
                     name = args[0];
                     try
                     {
-                        XcoQueue<Request> q = space.Get<XcoQueue<Request>>("RequestQ", new Uri("xco://" + Environment.MachineName + ":" + 9000));
+                        XcoQueue<Request> q = space.Get<XcoQueue<Request>>("RequestQ", spaceServer);
                         q.Enqueue(new Request() { FirmName = name, Shares = shares, PricePerShare = pricePerShare });
                     }
                     catch (XcoException)
@@ -43,7 +47,7 @@ namespace Firm
 
                     try
                     {
-                        XcoQueue<Request> q = space.Get<XcoQueue<Request>>("RequestQ", new Uri("xco://" + Environment.MachineName + ":" + 9000));
+                        XcoQueue<Request> q = space.Get<XcoQueue<Request>>("RequestQ", spaceServer);
                         q.Enqueue(new Request() { FirmName = name, Shares = shares, PricePerShare = pricePerShare });
                     }
                     catch (XcoException)
