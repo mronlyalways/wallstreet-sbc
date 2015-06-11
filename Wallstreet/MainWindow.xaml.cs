@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using Wallstreet.ViewModel;
+using System;
 
 namespace Wallstreet
 {

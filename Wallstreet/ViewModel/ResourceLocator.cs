@@ -1,4 +1,5 @@
 ﻿using Ninject;
+using System;
 using Wallstreet.Model;
 using XcoSpaces;
 
@@ -11,7 +12,7 @@ namespace Wallstreet.ViewModel
         static ResourceLocator()
         {
             kernel = new StandardKernel();
-            kernel.Bind<IDataService>().To<XcoDataService>().InSingletonScope();
+            
         }
 
         public MainViewModel Main
@@ -20,6 +21,19 @@ namespace Wallstreet.ViewModel
             {
                 return kernel.Get<MainViewModel>();
             }
+        }
+
+        public SetupViewModel Setup
+        {
+            get
+            {
+                return kernel.Get<SetupViewModel>();
+            }
+        }
+
+        public static void BindXcoDataService(Uri spaceServer)
+        {
+            kernel.Bind<IDataService>().To<XcoDataService>().InSingletonScope().WithConstructorArgument(spaceServer);
         }
 
         /// <summary>

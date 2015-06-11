@@ -13,7 +13,6 @@ namespace Wallstreet.Model
 {
     public class XcoDataService : IDataService, IDisposable
     {
-        private readonly Uri spaceServerUri = new Uri("xco://" + Environment.MachineName + ":" + 9000);
         private XcoSpace space;
         private XcoList<ShareInformation> stockInformation;
         private XcoQueue<Registration> investorDepotRegistrations;
@@ -29,7 +28,7 @@ namespace Wallstreet.Model
         private IList<Action<Order>> orderRemovedCallbacks;
         private IList<Action<Transaction>> transactionAddedCallbacks;
 
-        public XcoDataService()
+        public XcoDataService(Uri spaceServerUri)
         {
             marketCallbacks = new List<Action<ShareInformation>>();
             orderAddedCallbacks = new List<Action<Order>>();
