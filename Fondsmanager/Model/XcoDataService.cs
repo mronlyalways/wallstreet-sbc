@@ -30,7 +30,7 @@ namespace Fondsmanager.Model
         private FundRegistration registration;
         private FundDepot depot;
 
-        public XcoDataService()
+        public XcoDataService(IList<Uri> spaceServers)
         {
             space = new XcoSpace(0);
             marketCallbacks = new List<Action<ShareInformation>>();
