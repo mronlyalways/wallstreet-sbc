@@ -30,7 +30,7 @@ namespace Investor.Model
         private Registration registration;
         private InvestorDepot depot;
 
-        public XcoDataService()
+        public XcoDataService(IList<Uri> spaceServers)
         {
             space = new XcoSpace(0);
             marketCallbacks = new List<Action<ShareInformation>>();

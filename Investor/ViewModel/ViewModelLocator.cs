@@ -1,6 +1,9 @@
 ﻿using Ninject;
 using Investor.Model;
 using XcoSpaces;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Investor.ViewModel
 {
@@ -11,7 +14,6 @@ namespace Investor.ViewModel
         static ViewModelLocator()
         {
             kernel = new StandardKernel();
-            kernel.Bind<IDataService>().To<XcoDataService>().InSingletonScope();
         }
 
         public MainViewModel Main
@@ -28,6 +30,20 @@ namespace Investor.ViewModel
             {
                 return kernel.Get<LoginViewModel>();
             }
+        }
+
+        public SetupViewModel Setup
+        {
+            get
+            {
+                return kernel.Get<SetupViewModel>();
+            }
+        }
+
+        public static void BindXcoDataService(IList<Uri> spaceServers)
+        {
+
+            kernel.Bind<IDataService>().To<XcoDataService>().InSingletonScope().WithConstructorArgument(spaceServers);
         }
 
         /// <summary>
