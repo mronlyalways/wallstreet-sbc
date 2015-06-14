@@ -30,6 +30,8 @@ namespace Investor.ViewModel
             PlaceSellingOrderCommand = new RelayCommand(PlaceSellingOrder, () => SelectedSellingShare != null);
             CancelPendingOrderCommand = new RelayCommand(CancelPendingOrder, () => SelectedPendingOrder != null && SelectedPendingOrder.Status == Order.OrderStatus.OPEN);
             LogoutCommand = new RelayCommand(Logout, () => true);
+            ListOfSpaces = new ObservableCollection<string>(data.ListOfSpaces());
+            SelectedSpace = data.ListOfSpaces().First();
         }
 
         private void UpdateInvestorInformation(InvestorDepot d)
@@ -87,6 +89,37 @@ namespace Investor.ViewModel
                 }
 
                 return value;
+            }
+        }
+
+        private string selectedSpace;
+
+        public string SelectedSpace
+        {
+            get
+            {
+                return selectedSpace;
+            }
+            set
+            {
+                selectedSpace = value;
+                RaisePropertyChanged(() => SelectedSpace);
+                data.SetSpace(selectedSpace);
+            }
+        }
+
+        private ObservableCollection<string> listOfSpaces;
+
+        public ObservableCollection<string> ListOfSpaces
+        {
+            get
+            {
+                return listOfSpaces;
+            }
+            set
+            {
+                listOfSpaces = value;
+                RaisePropertyChanged(() => ListOfSpaces);
             }
         }
 

@@ -29,9 +29,11 @@ namespace Investor.Model
         private IList<Order> orderCache;
         private Registration registration;
         private InvestorDepot depot;
+        private IList<string> servers;
 
         public XcoDataService(IList<Uri> spaceServers)
         {
+            servers = spaceServers.Select<Uri,string>(x => x.ToString()).ToList();
             space = new XcoSpace(0);
             marketCallbacks = new List<Action<ShareInformation>>();
             investorDepotCallbacks = new List<Action<InvestorDepot>>();
@@ -107,6 +109,16 @@ namespace Investor.Model
                 }
 
             }
+        }
+
+        public void SetSpace(string space)
+        {
+
+        }
+
+        public IEnumerable<string> ListOfSpaces()
+        {
+            return servers;
         }
 
         public InvestorDepot LoadInvestorInformation()

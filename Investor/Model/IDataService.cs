@@ -17,6 +17,10 @@ namespace Investor.Model
 
         void CancelOrder(Order order);
 
+        void SetSpace(string space);
+
+        IEnumerable<string> ListOfSpaces();
+
         InvestorDepot LoadInvestorInformation();
 
         IEnumerable<ShareInformation> LoadMarketInformation();
