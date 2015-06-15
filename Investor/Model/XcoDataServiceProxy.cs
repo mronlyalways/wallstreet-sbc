@@ -38,9 +38,10 @@ namespace Investor.Model
 
         public void Login(Registration r)
         {
-            if (currentSpace != null)
+
+            foreach (XcoDataService service in dataServices.Values)
             {
-                dataServices[currentSpace].Login(r);
+                service.Login(r);
             }
         }
 
@@ -106,7 +107,7 @@ namespace Investor.Model
             }
         }
 
-        public void AddNewMarketInformationAvailableCallback(Action<ShareInformation> callback)
+        public void AddNewMarketInformationAvailableCallback(Action callback)
         {
             foreach (XcoDataService service in dataServices.Values)
             {
@@ -122,7 +123,7 @@ namespace Investor.Model
             }
         }
 
-        public void AddNewPendingOrdersCallback(Action<IEnumerable<Order>> callback)
+        public void AddNewPendingOrdersCallback(Action callback)
         {
             foreach (XcoDataService service in dataServices.Values)
             {

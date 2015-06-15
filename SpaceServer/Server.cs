@@ -18,7 +18,7 @@ namespace SpaceServer
         static void Main(string[] args)
         {
             using (XcoKernel kernel = new XcoKernel())
-            using (XcoSpace space = new XcoSpace(9000))
+            using (XcoSpace space = new XcoSpace(0))
             {
                 Console.WriteLine("Use the following URL to connect to this space: " + space.Address);
                 

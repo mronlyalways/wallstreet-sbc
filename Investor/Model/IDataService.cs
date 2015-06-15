@@ -27,9 +27,9 @@ namespace Investor.Model
 
         IEnumerable<Order> LoadPendingOrders();
 
-        void AddNewMarketInformationAvailableCallback(Action<ShareInformation> callback);
+        void AddNewMarketInformationAvailableCallback(Action callback);
 
-        void AddNewPendingOrdersCallback(Action<IEnumerable<Order>> callback);
+        void AddNewPendingOrdersCallback(Action callback);
 
         void AddNewInvestorInformationAvailableCallback(Action callback);
 

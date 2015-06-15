@@ -17,13 +17,11 @@ namespace Investor.ViewModel
         public MainViewModel(IDataService data)
         {
             this.data = data;
-            MarketInformation = new ObservableCollection<ShareInformation>(data.LoadMarketInformation());
             OwnedShares = new ObservableCollection<OwningShareDTO>();
             UpdateOwnedShares();
-            PendingOrders = new ObservableCollection<Order>(data.LoadPendingOrders());
             data.AddNewInvestorInformationAvailableCallback(UpdateInvestorInformation);
             data.AddNewMarketInformationAvailableCallback(UpdateShareInformation);
-            data.AddNewPendingOrdersCallback(o => PendingOrders = new ObservableCollection<Order>(o));
+            data.AddNewPendingOrdersCallback(() => RaisePropertyChanged(() => PendingOrders));
             PlaceBuyingOrderCommand = new RelayCommand(PlaceBuyingOrder, () => SelectedBuyingShare != null);
             PlaceSellingOrderCommand = new RelayCommand(PlaceSellingOrder, () => SelectedSellingShare != null);
             CancelPendingOrderCommand = new RelayCommand(CancelPendingOrder, () => SelectedPendingOrder != null && SelectedPendingOrder.Status == Order.OrderStatus.OPEN);
@@ -63,11 +61,9 @@ namespace Investor.ViewModel
 
         }
 
-        private void UpdateShareInformation(ShareInformation info)
+        private void UpdateShareInformation()
         {
-            MarketInformation = new ObservableCollection<ShareInformation>(MarketInformation.Where(x => x.FirmName != info.FirmName));
-            MarketInformation.Add(info);
-            MarketInformation = new ObservableCollection<ShareInformation>(from i in MarketInformation orderby i.FirmName select i);
+            RaisePropertyChanged(() => MarketInformation);
             UpdateOwnedShares();
         }
 
@@ -102,6 +98,9 @@ namespace Investor.ViewModel
                 selectedSpace = value;
                 RaisePropertyChanged(() => SelectedSpace);
                 data.SetSpace(selectedSpace);
+                RaisePropertyChanged(() => PendingOrders);
+                UpdateInvestorInformation();
+                UpdateShareInformation();
             }
         }
 
@@ -120,17 +119,11 @@ namespace Investor.ViewModel
             }
         }
 
-        private ObservableCollection<ShareInformation> marketInformation;
         public ObservableCollection<ShareInformation> MarketInformation
         {
             get
             {
-                return marketInformation;
-            }
-            set
-            {
-                marketInformation = new ObservableCollection<ShareInformation>(from i in value orderby i.FirmName select i);
-                RaisePropertyChanged(() => MarketInformation);
+                return new ObservableCollection<ShareInformation>(from i in data.LoadMarketInformation() orderby i.FirmName select i);
             }
         }
 
@@ -148,17 +141,11 @@ namespace Investor.ViewModel
             }
         }
 
-        private ObservableCollection<Order> pendingOrders;
         public ObservableCollection<Order> PendingOrders
         {
             get
             {
-                return pendingOrders;
-            }
-            set
-            {
-                pendingOrders = new ObservableCollection<Order>(from i in value orderby i.Id select i);
-                RaisePropertyChanged(() => PendingOrders);
+                return new ObservableCollection<Order>(from i in data.LoadPendingOrders() orderby i.Id select i);
             }
         }
 

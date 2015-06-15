@@ -21,9 +21,9 @@ namespace Investor.Model
         private XcoList<ShareInformation> stockInformation;
         private XcoList<Order> orders;
         private XcoQueue<Order> orderQueue;
-        private IList<Action<ShareInformation>> marketCallbacks;
+        private IList<Action> marketCallbacks;
         private IList<Action> investorDepotCallbacks;
-        private IList<Action<IEnumerable<Order>>> pendingOrdersCallback;
+        private IList<Action> pendingOrdersCallback;
         private IList<ShareInformation> shareInformationCache;
         private IList<Order> orderCache;
         private Registration registration;
@@ -33,9 +33,9 @@ namespace Investor.Model
         public XcoDataService(Uri spaceServerUri)
         {
             space = new XcoSpace(0);
-            marketCallbacks = new List<Action<ShareInformation>>();
+            marketCallbacks = new List<Action>();
             investorDepotCallbacks = new List<Action>();
-            pendingOrdersCallback = new List<Action<IEnumerable<Order>>>();
+            pendingOrdersCallback = new List<Action>();
             shareInformationCache = new List<ShareInformation>();
             orderCache = new List<Order>();
             depot = null;
@@ -169,10 +169,10 @@ namespace Investor.Model
             {
                 LoadMarketInformation();
             }
-            return orderCache.Where(x => x.InvestorId == depot.Email && x.NoOfOpenShares > 0);
+            return orderCache.Where(x => x.InvestorId == depot.Email && x.NoOfOpenShares > 0 && x.Status != Order.OrderStatus.DONE && x.Status != Order.OrderStatus.DELETED);
         }
 
-        public void AddNewMarketInformationAvailableCallback(Action<ShareInformation> callback)
+        public void AddNewMarketInformationAvailableCallback(Action callback)
         {
             marketCallbacks.Add(callback);
         }
@@ -182,7 +182,7 @@ namespace Investor.Model
             investorDepotCallbacks.Add(callback);
         }
 
-        public void AddNewPendingOrdersCallback(Action<IEnumerable<Order>> callback)
+        public void AddNewPendingOrdersCallback(Action callback)
         {
             pendingOrdersCallback.Add(callback);
         }
@@ -206,7 +206,7 @@ namespace Investor.Model
             share.PurchasingVolume = GetPurchasingVolume(orderCache, share.FirmName);
             share.SalesVolume = GetSalesVolume(orderCache, share.FirmName);
             shareInformationCache.Add(share);
-            ExecuteOnGUIThread(marketCallbacks, share);
+            ExecuteOnGUIThread(marketCallbacks);
         }
 
         private void OnNewOrderAdded(XcoList<Order> source, Order order, int index)
@@ -224,7 +224,7 @@ namespace Investor.Model
             {
                 share.PurchasingVolume = GetPurchasingVolume(orderCache, order.ShareName);
                 share.SalesVolume = GetSalesVolume(orderCache, order.ShareName);
-                ExecuteOnGUIThread(marketCallbacks, share);
+                ExecuteOnGUIThread(marketCallbacks);
 
                 if (depot != null)
                 {
@@ -235,8 +235,7 @@ namespace Investor.Model
 
         private void UpdatePendingOrders()
         {
-            var pendingOrders = orderCache.Where(x => x.InvestorId == depot.Email && x.NoOfOpenShares > 0 && x.Status != Order.OrderStatus.DONE && x.Status != Order.OrderStatus.DELETED);
-            ExecuteOnGUIThread(pendingOrdersCallback, pendingOrders);
+            ExecuteOnGUIThread(pendingOrdersCallback);
         }
 
         private int GetPurchasingVolume(IEnumerable<Order> orders, string key)
