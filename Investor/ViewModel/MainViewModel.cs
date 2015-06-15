@@ -13,12 +13,10 @@ namespace Investor.ViewModel
     public class MainViewModel : ViewModelBase
     {
         private IDataService data;
-        private InvestorDepot depot;
                 
         public MainViewModel(IDataService data)
         {
             this.data = data;
-            depot = data.LoadInvestorInformation();
             MarketInformation = new ObservableCollection<ShareInformation>(data.LoadMarketInformation());
             OwnedShares = new ObservableCollection<OwningShareDTO>();
             UpdateOwnedShares();
@@ -34,9 +32,8 @@ namespace Investor.ViewModel
             SelectedSpace = data.ListOfSpaces().First();
         }
 
-        private void UpdateInvestorInformation(InvestorDepot d)
+        private void UpdateInvestorInformation()
         {
-            depot = d;
             RaisePropertyChanged(() => Budget);
             UpdateOwnedShares();
         }
@@ -45,7 +42,7 @@ namespace Investor.ViewModel
         {
             var collection = new ObservableCollection<OwningShareDTO>();
 
-            foreach (String shareName in depot.Shares.Keys)
+            foreach (String shareName in data.LoadInvestorInformation().Shares.Keys)
             {
                  var infos = MarketInformation.Where(x => x.FirmName == shareName).ToList();
                 ShareInformation info = infos.First();
@@ -53,7 +50,7 @@ namespace Investor.ViewModel
                     OwningShareDTO s = new OwningShareDTO()
                     {
                         ShareName = shareName,
-                        Amount = depot.Shares[shareName],
+                        Amount = data.LoadInvestorInformation().Shares[shareName],
                         StockPrice = info.PricePerShare
                     };
                     collection.Add(s);
@@ -74,9 +71,9 @@ namespace Investor.ViewModel
             UpdateOwnedShares();
         }
 
-        public string Email { get { return depot.Email; } }
+        public string Email { get { return data.LoadInvestorInformation().Email; } }
 
-        public double Budget { get { return depot.Budget; } }
+        public double Budget { get { return data.LoadInvestorInformation().Budget; } }
 
         public double DepotValue
         {

@@ -31,8 +31,8 @@ namespace Investor.Model
 
         void AddNewPendingOrdersCallback(Action<IEnumerable<Order>> callback);
 
-        void AddNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback);
+        void AddNewInvestorInformationAvailableCallback(Action callback);
 
-        void RemoveNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback);
+        void RemoveNewInvestorInformationAvailableCallback(Action callback);
     }
 }

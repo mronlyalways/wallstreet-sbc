@@ -79,7 +79,7 @@ namespace Investor.ViewModel
             SubmitCommand.RaiseCanExecuteChanged();
         }
 
-        public void OnRegistrationConfirmed(InvestorDepot depot)
+        public void OnRegistrationConfirmed()
         {
             Messenger.Default.Send<NotificationMessage>(new NotificationMessage(this, "Close"));
             var MainWindow = new MainWindow();

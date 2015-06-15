@@ -15,7 +15,6 @@ namespace Investor.Model
 {
     class XcoDataService : IDataService
     {
-        private readonly Uri spaceServerUri = new Uri("xco://" + Environment.MachineName + ":" + 9000);
         private XcoSpace space;
         private XcoQueue<Registration> registrations;
         private XcoList<InvestorDepot> investorDepots;
@@ -23,7 +22,7 @@ namespace Investor.Model
         private XcoList<Order> orders;
         private XcoQueue<Order> orderQueue;
         private IList<Action<ShareInformation>> marketCallbacks;
-        private IList<Action<InvestorDepot>> investorDepotCallbacks;
+        private IList<Action> investorDepotCallbacks;
         private IList<Action<IEnumerable<Order>>> pendingOrdersCallback;
         private IList<ShareInformation> shareInformationCache;
         private IList<Order> orderCache;
@@ -31,12 +30,11 @@ namespace Investor.Model
         private InvestorDepot depot;
         private IList<string> servers;
 
-        public XcoDataService(IList<Uri> spaceServers)
+        public XcoDataService(Uri spaceServerUri)
         {
-            servers = spaceServers.Select<Uri,string>(x => x.ToString()).ToList();
             space = new XcoSpace(0);
             marketCallbacks = new List<Action<ShareInformation>>();
-            investorDepotCallbacks = new List<Action<InvestorDepot>>();
+            investorDepotCallbacks = new List<Action>();
             pendingOrdersCallback = new List<Action<IEnumerable<Order>>>();
             shareInformationCache = new List<ShareInformation>();
             orderCache = new List<Order>();
@@ -179,7 +177,7 @@ namespace Investor.Model
             marketCallbacks.Add(callback);
         }
 
-        public void AddNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback)
+        public void AddNewInvestorInformationAvailableCallback(Action callback)
         {
             investorDepotCallbacks.Add(callback);
         }
@@ -189,7 +187,7 @@ namespace Investor.Model
             pendingOrdersCallback.Add(callback);
         }
 
-        public void RemoveNewInvestorInformationAvailableCallback(Action<InvestorDepot> callback)
+        public void RemoveNewInvestorInformationAvailableCallback(Action callback)
         {
             investorDepotCallbacks.Remove(callback);
         }
@@ -199,7 +197,7 @@ namespace Investor.Model
             if (this.registration != null && this.registration.Email == d.Email)
             {
                 depot = d;
-                ExecuteOnGUIThread(investorDepotCallbacks, d);
+                ExecuteOnGUIThread(investorDepotCallbacks);
             }
         }
 
@@ -258,6 +256,17 @@ namespace Investor.Model
                 Application.Current.Dispatcher.BeginInvoke(new Action(() =>
                 {
                     callback(arg);
+                }), null);
+            }
+        }
+
+        private void ExecuteOnGUIThread(IEnumerable<Action> callbacks)
+        {
+            foreach (Action callback in callbacks)
+            {
+                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    callback();
                 }), null);
             }
         }
