@@ -20,5 +20,10 @@ namespace SharedFeatures.Model
         public double PricePerShare { get; set; }
 
         public bool isFund { get; set; }
+
+        public override string ToString()
+        {
+            return base.ToString() + " FirmName:" + FirmName + " NoOfShares:" + NoOfShares + " PurchasingVolume:" + PurchasingVolume + " SalesVolume:" + SalesVolume + " PricePerShare:" + PricePerShare + " isFund:" + isFund; 
+        }
     }
 }

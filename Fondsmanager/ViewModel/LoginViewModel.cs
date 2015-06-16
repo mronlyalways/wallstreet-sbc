@@ -96,7 +96,7 @@ namespace Fondsmanager.ViewModel
             SubmitCommand.RaiseCanExecuteChanged();
         }
 
-        public void OnRegistrationConfirmed(FundDepot depot)
+        public void OnRegistrationConfirmed()
         {
             Messenger.Default.Send<NotificationMessage>(new NotificationMessage(this, "Close"));
             var MainWindow = new MainWindow();

@@ -13,28 +13,25 @@ namespace Fondsmanager.ViewModel
     public class MainViewModel : ViewModelBase
     {
         private IDataService data;
-        private FundDepot depot;
                 
         public MainViewModel(IDataService data)
         {
             this.data = data;
-            depot = data.LoadFundInformation();
-            MarketInformation = new ObservableCollection<ShareInformation>(data.LoadMarketInformation());
             OwnedShares = new ObservableCollection<OwningShareDTO>();
             UpdateOwnedShares();
-            PendingOrders = new ObservableCollection<Order>(data.LoadPendingOrders());
             data.AddNewInvestorInformationAvailableCallback(UpdateFundInformation);
             data.AddNewMarketInformationAvailableCallback(UpdateShareInformation);
-            data.AddNewPendingOrdersCallback(o => PendingOrders = new ObservableCollection<Order>(o));
+            data.AddNewPendingOrdersCallback(() => RaisePropertyChanged(() => PendingOrders));
             PlaceBuyingOrderCommand = new RelayCommand(PlaceBuyingOrder, () => SelectedBuyingShare != null);
             PlaceSellingOrderCommand = new RelayCommand(PlaceSellingOrder, () => SelectedSellingShare != null);
             CancelPendingOrderCommand = new RelayCommand(CancelPendingOrder, () => SelectedPendingOrder != null && SelectedPendingOrder.Status == Order.OrderStatus.OPEN);
             LogoutCommand = new RelayCommand(Logout, () => true);
+            ListOfSpaces = new ObservableCollection<string>(data.ListOfSpaces());
+            SelectedSpace = data.ListOfSpaces().First();
         }
 
-        private void UpdateFundInformation(FundDepot d)
+        private void UpdateFundInformation()
         {
-            depot = d;
             RaisePropertyChanged(() => FundAssets);
             UpdateOwnedShares();
         }
@@ -43,7 +40,7 @@ namespace Fondsmanager.ViewModel
         {
             var collection = new ObservableCollection<OwningShareDTO>();
 
-            foreach (String shareName in depot.Shares.Keys)
+            foreach (String shareName in data.LoadFundInformation().Shares.Keys)
             {
                  var infos = MarketInformation.Where(x => x.FirmName == shareName).ToList();
                 ShareInformation info = infos.First();
@@ -51,7 +48,7 @@ namespace Fondsmanager.ViewModel
                     OwningShareDTO s = new OwningShareDTO()
                     {
                         ShareName = shareName,
-                        Amount = depot.Shares[shareName],
+                        Amount = data.LoadFundInformation().Shares[shareName],
                         StockPrice = info.PricePerShare
                     };
                     collection.Add(s);
@@ -64,18 +61,16 @@ namespace Fondsmanager.ViewModel
 
         }
 
-        private void UpdateShareInformation(ShareInformation info)
+        private void UpdateShareInformation()
         {
-            MarketInformation = new ObservableCollection<ShareInformation>(MarketInformation.Where(x => x.FirmName != info.FirmName));
-            MarketInformation.Add(info);
-            MarketInformation = new ObservableCollection<ShareInformation>(from i in MarketInformation orderby i.FirmName select i);
+            RaisePropertyChanged(() => MarketInformation);
             UpdateOwnedShares();
         }
 
-        public string FundID { get { return depot.FundID; } }
+        public string FundID { get { return data.LoadFundInformation().FundID; } }
 
-        public long FundShares { get { 
-            return depot.FundShares; 
+        public long FundShares { get {
+            return data.LoadFundInformation().FundShares; 
         } }
 
         public double FundAssets
@@ -88,23 +83,51 @@ namespace Fondsmanager.ViewModel
                     value += s.Value;
                 }
 
-                value += depot.FundBank;
+                value += data.LoadFundInformation().FundBank;
 
                 return value;
             }
         }
 
-        private ObservableCollection<ShareInformation> marketInformation;
+        private string selectedSpace;
+
+        public string SelectedSpace
+        {
+            get
+            {
+                return selectedSpace;
+            }
+            set
+            {
+                selectedSpace = value;
+                RaisePropertyChanged(() => SelectedSpace);
+                data.SetSpace(selectedSpace);
+                RaisePropertyChanged(() => PendingOrders);
+                UpdateFundInformation();
+                UpdateShareInformation();
+            }
+        }
+
+        private ObservableCollection<string> listOfSpaces;
+
+        public ObservableCollection<string> ListOfSpaces
+        {
+            get
+            {
+                return listOfSpaces;
+            }
+            set
+            {
+                listOfSpaces = value;
+                RaisePropertyChanged(() => ListOfSpaces);
+            }
+        }
+
         public ObservableCollection<ShareInformation> MarketInformation
         {
             get
             {
-                return marketInformation;
-            }
-            set
-            {
-                marketInformation = new ObservableCollection<ShareInformation>(from i in value orderby i.FirmName select i);
-                RaisePropertyChanged(() => MarketInformation);
+                return new ObservableCollection<ShareInformation>(from i in data.LoadMarketInformation() orderby i.FirmName select i);
             }
         }
 
@@ -122,17 +145,11 @@ namespace Fondsmanager.ViewModel
             }
         }
 
-        private ObservableCollection<Order> pendingOrders;
         public ObservableCollection<Order> PendingOrders
         {
             get
             {
-                return pendingOrders;
-            }
-            set
-            {
-                pendingOrders = new ObservableCollection<Order>(from i in value orderby i.Id select i);
-                RaisePropertyChanged(() => PendingOrders);
+                return new ObservableCollection<Order>(from i in data.LoadPendingOrders() orderby i.Id select i);
             }
         }
 

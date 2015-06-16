@@ -28,7 +28,6 @@ namespace Investor.Model
         private IList<Order> orderCache;
         private Registration registration;
         private InvestorDepot depot;
-        private IList<string> servers;
 
         public XcoDataService(Uri spaceServerUri)
         {
@@ -116,7 +115,7 @@ namespace Investor.Model
 
         public IEnumerable<string> ListOfSpaces()
         {
-            return servers;
+            return null;
         }
 
         public InvestorDepot LoadInvestorInformation()

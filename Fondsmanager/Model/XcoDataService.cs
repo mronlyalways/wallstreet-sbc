@@ -15,27 +15,26 @@ namespace Fondsmanager.Model
 {
     class XcoDataService : IDataService
     {
-        private readonly Uri spaceServerUri = new Uri("xco://" + Environment.MachineName + ":" + 9000);
         private XcoSpace space;
         private XcoQueue<FundRegistration> registrations;
         private XcoList<FundDepot> fundDepots;
         private XcoList<ShareInformation> stockInformation;
         private XcoList<Order> orders;
         private XcoQueue<Order> orderQueue;
-        private IList<Action<ShareInformation>> marketCallbacks;
-        private IList<Action<FundDepot>> fundDepotCallbacks;
-        private IList<Action<IEnumerable<Order>>> pendingOrdersCallback;
+        private IList<Action> marketCallbacks;
+        private IList<Action> fundDepotCallbacks;
+        private IList<Action> pendingOrdersCallback;
         private IList<ShareInformation> shareInformationCache;
         private IList<Order> orderCache;
         private FundRegistration registration;
         private FundDepot depot;
 
-        public XcoDataService(IList<Uri> spaceServers)
+        public XcoDataService(Uri spaceServerUri)
         {
             space = new XcoSpace(0);
-            marketCallbacks = new List<Action<ShareInformation>>();
-            fundDepotCallbacks = new List<Action<FundDepot>>();
-            pendingOrdersCallback = new List<Action<IEnumerable<Order>>>();
+            marketCallbacks = new List<Action>();
+            fundDepotCallbacks = new List<Action>();
+            pendingOrdersCallback = new List<Action>();
             shareInformationCache = new List<ShareInformation>();
             orderCache = new List<Order>();
             depot = null;
@@ -107,6 +106,15 @@ namespace Fondsmanager.Model
                 }
 
             }
+        }
+        public void SetSpace(string space)
+        {
+
+        }
+
+        public IEnumerable<string> ListOfSpaces()
+        {
+            return null;
         }
 
         public FundDepot LoadFundInformation()
@@ -180,22 +188,22 @@ namespace Fondsmanager.Model
             return orderCache.Where(x => x.InvestorId == depot.FundID && x.NoOfOpenShares > 0 && x.ShareName != depot.FundID);
         }
 
-        public void AddNewMarketInformationAvailableCallback(Action<ShareInformation> callback)
+        public void AddNewMarketInformationAvailableCallback(Action callback)
         {
             marketCallbacks.Add(callback);
         }
 
-        public void AddNewInvestorInformationAvailableCallback(Action<FundDepot> callback)
+        public void AddNewInvestorInformationAvailableCallback(Action callback)
         {
             fundDepotCallbacks.Add(callback);
         }
 
-        public void AddNewPendingOrdersCallback(Action<IEnumerable<Order>> callback)
+        public void AddNewPendingOrdersCallback(Action callback)
         {
             pendingOrdersCallback.Add(callback);
         }
 
-        public void RemoveNewInvestorInformationAvailableCallback(Action<FundDepot> callback)
+        public void RemoveNewInvestorInformationAvailableCallback(Action callback)
         {
             fundDepotCallbacks.Remove(callback);
         }
@@ -205,18 +213,19 @@ namespace Fondsmanager.Model
             if (this.registration != null && this.registration.FundID == d.FundID)
             {
                 depot = d;
-                ExecuteOnGUIThread(fundDepotCallbacks, d);
+                ExecuteOnGUIThread(fundDepotCallbacks);
             }
         }
 
         private void OnShareInformationAdded(XcoList<ShareInformation> source, ShareInformation share, int index)
         {
+            Console.WriteLine("New update for: " + share);
             if (!isFund(share))
             {
                 share.PurchasingVolume = GetPurchasingVolume(orderCache, share.FirmName);
                 share.SalesVolume = GetSalesVolume(orderCache, share.FirmName);
                 shareInformationCache.Add(share);
-                ExecuteOnGUIThread(marketCallbacks, share);
+                ExecuteOnGUIThread(marketCallbacks);
             }
         }
 
@@ -235,7 +244,7 @@ namespace Fondsmanager.Model
             {
                 share.PurchasingVolume = GetPurchasingVolume(orderCache, order.ShareName);
                 share.SalesVolume = GetSalesVolume(orderCache, order.ShareName);
-                ExecuteOnGUIThread(marketCallbacks, share);
+                ExecuteOnGUIThread(marketCallbacks);
 
                 if (depot != null)
                 {
@@ -247,7 +256,7 @@ namespace Fondsmanager.Model
         private void UpdatePendingOrders()
         {
             var pendingOrders = orderCache.Where(x => x.InvestorId == depot.FundID && x.NoOfOpenShares > 0 && x.Status != Order.OrderStatus.DONE && x.Status != Order.OrderStatus.DELETED);
-            ExecuteOnGUIThread(pendingOrdersCallback, pendingOrders);
+            ExecuteOnGUIThread(pendingOrdersCallback);
         }
 
         private int GetPurchasingVolume(IEnumerable<Order> orders, string key)
@@ -258,6 +267,17 @@ namespace Fondsmanager.Model
         private int GetSalesVolume(IEnumerable<Order> orders, string key)
         {
             return orders.Where(x => x.ShareName == key && x.Type == Order.OrderType.SELL && x.Status != Order.OrderStatus.DONE && x.Status != Order.OrderStatus.DELETED).Sum(x => x.NoOfOpenShares);
+        }
+
+        private void ExecuteOnGUIThread(IEnumerable<Action> callbacks)
+        {
+            foreach (Action callback in callbacks)
+            {
+                Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    callback();
+                }), null);
+            }
         }
 
         private void ExecuteOnGUIThread<T>(IEnumerable<Action<T>> callbacks, T arg)

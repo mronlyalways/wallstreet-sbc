@@ -11,11 +11,15 @@ namespace Fondsmanager.Model
 {
     public interface IDataService : IDisposable
     {
+        void SetSpace(string space);
+
         void Login(FundRegistration r);
 
         void PlaceOrder(Order order);
 
         void CancelOrder(Order order);
+
+        IEnumerable<string> ListOfSpaces();
 
         FundDepot LoadFundInformation();
 
@@ -23,12 +27,12 @@ namespace Fondsmanager.Model
 
         IEnumerable<Order> LoadPendingOrders();
 
-        void AddNewMarketInformationAvailableCallback(Action<ShareInformation> callback);
+        void AddNewMarketInformationAvailableCallback(Action callback);
 
-        void AddNewPendingOrdersCallback(Action<IEnumerable<Order>> callback);
+        void AddNewPendingOrdersCallback(Action callback);
 
-        void AddNewInvestorInformationAvailableCallback(Action<FundDepot> callback);
+        void AddNewInvestorInformationAvailableCallback(Action callback);
 
-        void RemoveNewInvestorInformationAvailableCallback(Action<FundDepot> callback);
+        void RemoveNewInvestorInformationAvailableCallback(Action callback);
     }
 }

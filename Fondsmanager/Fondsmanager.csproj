@@ -83,6 +83,7 @@
     </Compile>
     <Compile Include="Model\IDataService.cs" />
     <Compile Include="Model\OwningShareDTO.cs" />
+    <Compile Include="Model\XcoDataServiceProxy.cs" />
     <Compile Include="ViewModel\LoginViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\SetupViewModel.cs" />

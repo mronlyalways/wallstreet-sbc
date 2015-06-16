@@ -43,7 +43,7 @@ namespace Fondsmanager.ViewModel
         public static void BindXcoDataService(IList<Uri> spaceServers)
         {
 
-            kernel.Bind<IDataService>().To<XcoDataService>().InSingletonScope().WithConstructorArgument(spaceServers);
+            kernel.Bind<IDataService>().To<XcoDataServiceProxy>().InSingletonScope().WithConstructorArgument(spaceServers);
         }
 
         /// <summary>

@@ -60,6 +60,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition/>
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0" Margin="0,5,0,10" HorizontalAlignment="Stretch">
@@ -71,7 +72,8 @@
             <Label Content="{Binding FundAssets}" />
             <Button Margin="0,0,10,0" HorizontalAlignment="Right" Content="Logout" Command="{Binding LogoutCommand}" />
         </DockPanel>
-        <TabControl Grid.Row="1">
+        <ComboBox Grid.Row="1" Margin="0,0,0,10" ItemsSource="{Binding ListOfSpaces}" SelectedItem="{Binding SelectedSpace}"/>
+        <TabControl Grid.Row="2">
             <TabItem Header="Market">
                 <Grid>
                     <Grid.ColumnDefinitions>
