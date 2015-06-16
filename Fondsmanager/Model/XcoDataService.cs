@@ -165,18 +165,8 @@ namespace Fondsmanager.Model
 
         public bool isFund(ShareInformation share)
         {
-            using (XcoTransaction tx = space.BeginTransaction())
-            {
-                bool isfund = false;
+            return share.isFund;
 
-                FundDepot d = Utils.FindElement(fundDepots, share.FirmName, "FundID");
-                isfund = (d != null);
-
-
-                tx.Commit();
-                return isfund;
-
-            }
         }
 
         public IEnumerable<Order> LoadPendingOrders()
@@ -185,7 +175,7 @@ namespace Fondsmanager.Model
             {
                 LoadMarketInformation();
             }
-            return orderCache.Where(x => x.InvestorId == depot.FundID && x.NoOfOpenShares > 0 && x.ShareName != depot.FundID);
+            return orderCache.Where(x => x.InvestorId == depot.FundID && x.NoOfOpenShares > 0 && x.ShareName != depot.FundID && x.Status != Order.OrderStatus.DONE && x.Status != Order.OrderStatus.DELETED);
         }
 
         public void AddNewMarketInformationAvailableCallback(Action callback)
