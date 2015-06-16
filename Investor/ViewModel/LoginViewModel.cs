@@ -4,6 +4,8 @@ using GalaSoft.MvvmLight.Messaging;
 using Investor.Model;
 using Investor.View;
 using SharedFeatures.Model;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Investor.ViewModel
 {
@@ -12,6 +14,7 @@ namespace Investor.ViewModel
     {
         private IDataService data;
         private bool submitted;
+        private int loginCounter;
 
         public LoginViewModel(IDataService data)
         {
@@ -81,6 +84,13 @@ namespace Investor.ViewModel
 
         public void OnRegistrationConfirmed()
         {
+            loginCounter += 1;
+
+            if (loginCounter != (new List<string>(data.ListOfSpaces())).Count)
+            {
+                return;
+            }
+
             Messenger.Default.Send<NotificationMessage>(new NotificationMessage(this, "Close"));
             var MainWindow = new MainWindow();
             MainWindow.Show();

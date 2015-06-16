@@ -4,6 +4,8 @@ using GalaSoft.MvvmLight.Messaging;
 using Fondsmanager.Model;
 using Fondsmanager.View;
 using SharedFeatures.Model;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Fondsmanager.ViewModel
 {
@@ -12,6 +14,7 @@ namespace Fondsmanager.ViewModel
     {
         private IDataService data;
         private bool submitted;
+        private int loginCounter;
 
         public LoginViewModel(IDataService data)
         {
@@ -98,6 +101,13 @@ namespace Fondsmanager.ViewModel
 
         public void OnRegistrationConfirmed()
         {
+            loginCounter += 1;
+
+            if (loginCounter != (new List<string>(data.ListOfSpaces())).Count)
+            {
+                return;
+            }
+
             Messenger.Default.Send<NotificationMessage>(new NotificationMessage(this, "Close"));
             var MainWindow = new MainWindow();
             MainWindow.Show();
