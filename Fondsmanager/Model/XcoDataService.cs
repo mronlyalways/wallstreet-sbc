@@ -127,14 +127,15 @@ namespace Fondsmanager.Model
             shareInformationCache = new List<ShareInformation>();
             orderCache = new List<Order>();
 
-            for (int i = 0; i < orders.Count; i++)
-            {
-                orderCache.Add(orders[i]);
-            }
             using (XcoTransaction tx = space.BeginTransaction())
             {
                 try
                 {
+
+                    for (int i = 0; i < orders.Count; i++)
+                    {
+                        orderCache.Add(orders[i]);
+                    }
 
                         for (int i = 0; i < stockInformation.Count; i++) {
                             ShareInformation s = stockInformation[i];

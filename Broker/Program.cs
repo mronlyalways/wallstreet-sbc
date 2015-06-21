@@ -626,6 +626,7 @@ namespace Broker
             else if (Utils.FindElement(fundDepots, t.SellerId, "FundID") != null)
             {
                 var seller = Utils.FindElement(fundDepots, t.SellerId, "FundID");
+                seller.RemoveShares(t.ShareName, t.NoOfSharesSold);
                 seller.FundBank += (t.TotalCost - t.SellerProvision);
                 Utils.ReplaceElement(fundDepots, seller, "FundID");
             }

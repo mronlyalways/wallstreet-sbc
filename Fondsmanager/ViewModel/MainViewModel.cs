@@ -42,9 +42,10 @@ namespace Fondsmanager.ViewModel
 
             foreach (String shareName in data.LoadFundInformation().Shares.Keys)
             {
-                 var infos = MarketInformation.Where(x => x.FirmName == shareName).ToList();
-                ShareInformation info = infos.First();
-                if (info != null) {
+                var infos = MarketInformation.Where(x => x.FirmName == shareName).ToList();
+                
+                if (infos.Count > 0) {
+                    ShareInformation info = infos.First();
                     OwningShareDTO s = new OwningShareDTO()
                     {
                         ShareName = shareName,

@@ -43,8 +43,9 @@ namespace Investor.ViewModel
             foreach (String shareName in data.LoadInvestorInformation().Shares.Keys)
             {
                  var infos = MarketInformation.Where(x => x.FirmName == shareName).ToList();
-                ShareInformation info = infos.First();
-                if (info != null) {
+                
+                if (infos.Count > 0) {
+                    ShareInformation info = infos.First();
                     OwningShareDTO s = new OwningShareDTO()
                     {
                         ShareName = shareName,
