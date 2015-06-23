@@ -222,7 +222,7 @@ namespace Broker
             {
                 try
                 {
-                    FundDepot d = source.Dequeue(false);
+                    FundDepot d = source.Dequeue(true);
 
                     if (d != null)
                     {
@@ -234,7 +234,7 @@ namespace Broker
                                 isFund = true
                             };
                             stockInformation.Add(s);
-                        
+                            
                         var orderId = depot.FundID + DateTime.Now.Ticks.ToString();
                         Order o = new Order()
                         {
@@ -247,7 +247,7 @@ namespace Broker
                             TotalNoOfShares = depot.FundShares
                         };
                         orderQueue.Enqueue(o);
-
+                        Console.WriteLine("Dequeued: " + d);
                     }
 
                     tx.Commit();

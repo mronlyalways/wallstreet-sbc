@@ -50,7 +50,7 @@ namespace SharedFeatures.Model
 
         public override string ToString()
         {
-            String output = "Fund assets: " + this.FundBank + "; Shares: ";
+            String output = "Fund:" + FundID + " Fund assets: " + this.FundBank + "; Shares: ";
             if (this.Shares != null)
             {
                 foreach (string key in this.Shares.Keys)
